@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>チヌクエスト</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;
+  --border:#30363d;--border2:#58a6ff;
+  --text:#c9d1d9;--text-dim:#8b949e;--text-gold:#ffd700;
+  --fire:#ff6b35;--water:#58a6ff;--grass:#3fb950;
+  --hp-green:#22cc44;--hp-yellow:#ddcc00;--hp-red:#cc2200;
+  --cp:#f7c948;--p1:#58a6ff;--p2:#ff6b35;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;overflow-x:hidden;max-width:480px;margin:0 auto}
+
+.status-bar{background:var(--bg2);border-bottom:2px solid var(--border);padding:6px 8px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:50}
+.pstat{display:flex;align-items:center;gap:6px}
+.pstat-right{flex-direction:row-reverse}
+.picon{font-size:22px;line-height:1;flex-shrink:0}
+.pinfo{flex:1}
+.pname{font-size:11px;font-weight:700;letter-spacing:.5px}
+.pgold{font-size:11px;color:var(--text-gold);font-family:'DotGothic16',monospace}
+.php-wrap{height:5px;background:#111;border-radius:3px;margin-top:3px;overflow:hidden;width:100%}
+.php{height:100%;border-radius:3px;transition:width .4s,background .4s}
+.turn-center{text-align:center;font-family:'DotGothic16',monospace;font-size:10px;color:var(--text-dim);line-height:1.6}
+.turn-center span{color:var(--text-gold);font-size:13px;display:block}
+.cp-pip-wrap{display:flex;justify-content:center;gap:3px;margin-top:2px}
+.cp-pip{width:8px;height:8px;border-radius:50%;border:1px solid var(--border);transition:background .3s}
+.cp-pip.done{background:var(--cp)}
+
+.board-area{position:relative;width:100%;background:#080c10}
+#boardCanvas{display:block;width:100%;height:auto}
+
+.msg-box{background:var(--bg2);border-top:2px solid var(--border2);border-bottom:2px solid var(--border);padding:10px 12px;font-family:'DotGothic16',monospace;font-size:13px;line-height:1.9;min-height:58px}
+.msg-cursor{display:inline-block;animation:blink .6s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.dice-row{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px;background:var(--bg2)}
+.dice-face{font-size:44px;line-height:1;font-family:'DotGothic16',monospace;color:var(--text-gold)}
+
+.cmd-row{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg);border-top:1px solid var(--border)}
+.cmd-btn{flex:1;min-width:120px;padding:14px 12px;border:2px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text-gold);cursor:pointer;font-family:'DotGothic16',monospace;font-size:14px;letter-spacing:1px;transition:all .15s;text-align:center;-webkit-user-select:none;user-select:none}
+.cmd-btn:active{transform:scale(.97);opacity:.85}
+.cmd-btn:disabled{opacity:.3;pointer-events:none}
+.cmd-btn.green{border-color:var(--grass);color:var(--grass);background:#001a08}
+.cmd-btn.red{border-color:var(--fire);color:var(--fire);background:#1a0800}
+.cmd-btn.blue{border-color:var(--water);color:var(--water);background:#00081a}
+.cmd-btn.gold{border-color:var(--text-gold);color:var(--text-gold);background:#1a1400}
+.cmd-btn.purple{border-color:#9f7ae8;color:#c9a8ff;background:#100a1a}
+
+.log-section{background:var(--bg2);border-top:1px solid var(--border)}
+.log-toggle{width:100%;padding:8px 12px;background:none;border:none;color:var(--text-dim);font-size:11px;text-align:left;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;justify-content:space-between;align-items:center}
+.log-body{display:none;padding:8px 12px;max-height:100px;overflow-y:auto;font-size:11px;color:var(--text-dim);line-height:1.9}
+.log-body.open{display:block}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:flex-end;justify-content:center;z-index:200}
+.overlay.show{display:flex}
+.overlay-sheet{background:var(--bg2);border-radius:16px 16px 0 0;border-top:3px solid var(--border2);padding:16px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto}
+.ov-title{font-family:'DotGothic16',monospace;font-size:15px;color:var(--text-gold);margin-bottom:10px;letter-spacing:2px}
+.ov-body{font-size:13px;line-height:2;margin-bottom:12px;color:var(--text)}
+.ov-btns{display:flex;flex-direction:column;gap:8px}
+.ov-btn{padding:14px;border:2px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text);font-family:'DotGothic16',monospace;font-size:13px;cursor:pointer;text-align:left;transition:all .15s;width:100%}
+.ov-btn:active{opacity:.8}
+.ov-btn:disabled{opacity:.3;pointer-events:none}
+.ov-btn.green{border-color:var(--grass);color:var(--grass)}
+.ov-btn.red{border-color:var(--fire);color:var(--fire)}
+.ov-btn.gold{border-color:var(--text-gold);color:var(--text-gold)}
+.ov-btn.purple{border-color:#9f7ae8;color:#c9a8ff}
+.ov-btn.blue{border-color:var(--water);color:var(--water)}
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <div class="pstat" id="pstat1">
+    <div class="picon">🐟</div>
+    <div class="pinfo">
+      <div class="pname" style="color:var(--p1)" id="p1name">チヌ</div>
+      <div class="pgold" id="p1gold">500G</div>
+      <div class="php-wrap"><div class="php" id="p1hp" style="width:100%;background:var(--hp-green)"></div></div>
+    </div>
+  </div>
+  <div class="turn-center">
+    <span id="turnDisp">1</span>ターン
+    <div class="cp-pip-wrap">
+      <div class="cp-pip" id="p1cp"></div>
+      <div style="width:4px"></div>
+      <div class="cp-pip" id="p2cp"></div>
+    </div>
+  </div>
+  <div class="pstat pstat-right" id="pstat2">
+    <div class="picon">🐡</div>
+    <div class="pinfo" style="text-align:right">
+      <div class="pname" style="color:var(--p2)" id="p2name">クエAI</div>
+      <div class="pgold" id="p2gold">0G</div>
+      <div class="php-wrap"><div class="php" id="p2hp" style="width:100%;background:var(--hp-green)"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="board-area">
+  <canvas id="boardCanvas"></canvas>
+</div>
+
+<div class="msg-box" id="msgBox">チヌクエスト スタート！<span class="msg-cursor">█</span></div>
+<div class="dice-row"><div class="dice-face" id="diceDisp">🎲</div></div>
+<div class="cmd-row" id="cmdRow">
+  <button class="cmd-btn green" onclick="rollDice()">🎲 ダイスを振る</button>
+</div>
+
+<div class="log-section">
+  <button class="log-toggle" onclick="toggleLog()">
+    <span>📜 ログ</span><span id="logArrow">▼</span>
+  </button>
+  <div class="log-body" id="logBody"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-sheet">
+    <div class="ov-title" id="ovTitle"></div>
+    <div class="ov-body" id="ovBody"></div>
+    <div class="ov-btns" id="ovBtns"></div>
+  </div>
+</div>
+
+<script>
+const N=18;
+const ATTR_COLOR={fire:'#ff6b35',water:'#58a6ff',grass:'#3fb950',none:'#444'};
+const ATTR_LABEL={fire:'🔥火',water:'💧水',grass:'🌿草',none:'無'};
+
+const canvas=document.getElementById('boardCanvas');
+const ctx=canvas.getContext('2d');
+
+function resize(){
+  const w=Math.min(window.innerWidth,480);
+  canvas.width=w; canvas.height=w;
+  draw();
+}
+window.addEventListener('resize',resize);
+
+function buildMap(size){
+  const PAD=size*0.12;
+  const pos=[];
+  const W=size,H=size;
+  for(let i=0;i<5;i++) pos.push({x:PAD+i*(W-PAD*2)/4,y:PAD});
+  for(let i=1;i<=4;i++) pos.push({x:W-PAD,y:PAD+i*(H-PAD*2)/5});
+  for(let i=4;i>=0;i--) pos.push({x:PAD+i*(W-PAD*2)/4,y:H-PAD});
+  for(let i=4;i>=1;i--) pos.push({x:PAD,y:PAD+i*(H-PAD*2)/5});
+  return pos;
+}
+
+function makeCells(){
+  const size=Math.min(window.innerWidth,480);
+  const pos=buildMap(size);
+  return pos.map((p,i)=>{
+    let type='empty';
+    if(i===0) type='goal';
+    else if(i===9) type='cp';
+    else if(i===3||i===13) type='shop';
+    return {id:i,x:p.x,y:p.y,type,attr:'none',owner:null,monster:null,
+      name:{goal:'ゴール',cp:'CP',shop:'ショップ'}[type]||`${i}`,
+      price:120+i*8,toll:40+i*4};
+  });
+}
+
+let cells=makeCells();
+let connections=[];
+for(let i=0;i<N-1;i++) connections.push([i,i+1]);
+connections.push([N-1,0]);
+
+const PLAYERS=[
+  {id:0,name:'チヌ',icon:'🐟',color:'#58a6ff',
+   atk:5,def:5,hp:50,maxHp:50,attr:'fire',gold:500,
+   pos:0,cpDone:false,lap:1,isAI:false,weapon:null,armor:null,monsters:[]},
+  {id:1,name:'クエ',icon:'🐡',color:'#ff6b35',
+   atk:7,def:7,hp:50,maxHp:50,attr:'fire',gold:0,
+   pos:0,cpDone:false,lap:1,isAI:true,weapon:null,armor:null,monsters:[],isKue:true},
+];
+
+let turnIndex=0,turnCount=1,moving=false,lapBonus=500,lapBonusInc=100;
+
+function getCellR(){ return Math.min(window.innerWidth,480)*0.055; }
+
+function draw(){
+  const size=canvas.width;
+  ctx.clearRect(0,0,size,size);
+  ctx.fillStyle='#080c10';ctx.fillRect(0,0,size,size);
+  for(let x=0;x<size;x+=30)for(let y=0;y<size;y+=30){
+    ctx.fillStyle='#141c24';ctx.fillRect(x,y,1,1);
+  }
+  connections.forEach(([a,b])=>{
+    const ca=cells[a],cb=cells[b];
+    ctx.beginPath();ctx.moveTo(ca.x,ca.y);ctx.lineTo(cb.x,cb.y);
+    ctx.strokeStyle='#1e2a38';ctx.lineWidth=4;ctx.stroke();
+  });
+  cells.forEach(c=>drawCell(c));
+  PLAYERS.forEach((p,i)=>drawPiece(p,i));
+}
+
+function drawCell(c){
+  const r=getCellR();
+  const style={
+    goal:{bg:'#2a1e00',border:'#ffd700'},
+    empty:{bg:'#0e1e0e',border:'#3fb950'},
+    land:{bg:'#0e1624',border:'#58a6ff'},
+    shop:{bg:'#1a0f2e',border:'#9f7ae8'},
+    cp:{bg:'#1e1e00',border:'#f7c948'},
+  }[c.type]||{bg:'#0e1e0e',border:'#3fb950'};
+
+  if(c.owner!=null){ctx.shadowColor=PLAYERS[c.owner].color;ctx.shadowBlur=8;}
+  ctx.fillStyle=style.bg;
+  ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=c.owner!=null?PLAYERS[c.owner].color:style.border;
+  ctx.lineWidth=c.owner!=null?2.5:1.8;
+  ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.stroke();
+  ctx.shadowBlur=0;
+
+  if(c.attr!=='none'&&c.type==='land'){
+    ctx.strokeStyle=ATTR_COLOR[c.attr];ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(c.x,c.y,r+4,0,Math.PI*2);ctx.stroke();
+  }
+
+  ctx.textAlign='center';
+  const fs=Math.max(10,r*0.7);
+  if(c.type==='cp'){
+    ctx.font=`bold ${fs*0.85}px "Noto Sans JP",sans-serif`;
+    ctx.fillStyle='#f7c948';ctx.fillText('CP',c.x,c.y+fs*0.32);
+  } else if(c.type==='goal'){
+    ctx.font=`${fs*1.3}px serif`;ctx.fillStyle='#fff';ctx.fillText('⭐',c.x,c.y+fs*0.45);
+  } else if(c.type==='shop'){
+    ctx.font=`${fs*1.2}px serif`;ctx.fillStyle='#fff';ctx.fillText('🃏',c.x,c.y+fs*0.45);
+  } else if(c.type==='land'){
+    const ico=c.attr==='fire'?'🔥':c.attr==='water'?'💧':'🌿';
+    ctx.font=`${fs*1.1}px serif`;ctx.fillStyle='#fff';ctx.fillText(ico,c.x,c.y+fs*0.4);
+  } else {
+    ctx.font=`${fs*0.75}px "Noto Sans JP",sans-serif`;
+    ctx.fillStyle='#3a5a3a';ctx.fillText(c.id,c.x,c.y+fs*0.3);
+  }
+}
+
+function drawPiece(p,idx){
+  const cell=cells[p.pos];
+  const r=getCellR();
+  const angle=idx===0?(-Math.PI*0.6):(Math.PI*0.6);
+  const d=r*0.85;
+  const x=cell.x+Math.cos(angle)*d;
+  const y=cell.y+Math.sin(angle)*d;
+  const pr=r*0.65;
+
+  ctx.shadowColor=p.color;ctx.shadowBlur=16;
+  ctx.fillStyle=p.color+'55';
+  ctx.beginPath();ctx.arc(x,y,pr,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=p.color;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(x,y,pr,0,Math.PI*2);ctx.stroke();
+  ctx.shadowBlur=0;
+
+  const fs=Math.max(10,pr*1.1);
+  ctx.font=`${fs}px serif`;ctx.textAlign='center';ctx.fillText(p.icon,x,y+pr*0.4);
+
+  const bw=pr*2.2,bx=x-bw/2,by=y+pr+3;
+  ctx.fillStyle='#111';ctx.fillRect(bx,by,bw,3);
+  const pct=p.hp/p.maxHp;
+  ctx.fillStyle=pct>.5?'#22cc44':pct>.25?'#ddcc00':'#cc2200';
+  ctx.fillRect(bx,by,bw*pct,3);
+}
+
+function updateUI(){
+  PLAYERS.forEach((p,i)=>{
+    const n=i+1;
+    document.getElementById(`p${n}gold`).textContent=p.gold+'G';
+    const bar=document.getElementById(`p${n}hp`);
+    const pct=p.hp/p.maxHp*100;
+    bar.style.width=pct+'%';
+    bar.style.background=pct>50?'var(--hp-green)':pct>25?'var(--hp-yellow)':'var(--hp-red)';
+    document.getElementById(`p${n}cp`).className='cp-pip'+(p.cpDone?' done':'');
+  });
+  document.getElementById('turnDisp').textContent=turnCount;
+  document.getElementById('pstat1').style.opacity=turnIndex===0?'1':'0.5';
+  document.getElementById('pstat2').style.opacity=turnIndex===1?'1':'0.5';
+}
+
+function setMsg(html){document.getElementById('msgBox').innerHTML=html+'<span class="msg-cursor">█</span>';}
+function setCmds(btns){
+  const row=document.getElementById('cmdRow');row.innerHTML='';
+  btns.forEach(b=>{
+    const el=document.createElement('button');
+    el.className='cmd-btn '+(b.cls||'');
+    el.textContent=b.label;el.disabled=!!b.disabled;el.onclick=b.fn;
+    row.appendChild(el);
+  });
+}
+function addLog(msg){
+  const el=document.getElementById('logBody');
+  const d=document.createElement('div');d.innerHTML=msg;el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+function toggleLog(){
+  const b=document.getElementById('logBody');
+  const open=b.classList.toggle('open');
+  document.getElementById('logArrow').textContent=open?'▲':'▼';
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function rollDice(){
+  if(moving)return;
+  const p=PLAYERS[turnIndex];setCmds([]);
+  const faces=['⚀','⚁','⚂','⚃','⚄','⚅'];
+  let f=0;
+  const id=setInterval(()=>{document.getElementById('diceDisp').textContent=faces[Math.floor(Math.random()*6)];if(++f>12)clearInterval(id);},70);
+  await wait(950);
+  const roll=Math.floor(Math.random()*6)+1;
+  document.getElementById('diceDisp').textContent=faces[roll-1];
+  setMsg(`${p.icon} <span style="color:${p.color}">${p.name}</span> — ダイス <span style="color:var(--text-gold);font-size:16px">${roll}</span>`);
+  await wait(500);
+  await movePlayer(p,roll);
+}
+
+async function movePlayer(p,steps){
+  moving=true;
+  for(let s=0;s<steps;s++){
+    const nexts=connections.filter(([a])=>a===p.pos).map(([,b])=>b);
+    let next=nexts[0];
+    if(nexts.length>1&&!p.isAI) next=await chooseBranch(nexts);
+    else if(nexts.length>1) next=nexts[Math.floor(Math.random()*nexts.length)];
+    p.pos=next;
+    if(cells[next].type==='goal'&&s<steps-1) await passGoal(p);
+    if(cells[next].type==='cp'&&!p.cpDone){
+      p.cpDone=true;p.gold+=100;
+      setMsg(`<span style="color:var(--cp)">⚑ CP 通過！ +100G</span>`);
+      addLog(`${p.name} CP通過 +100G`);updateUI();await wait(700);
+    }
+    draw();await wait(250);
+  }
+  moving=false;
+  await landEvent(p);
+}
+
+async function chooseBranch(nexts){
+  return new Promise(res=>{
+    setMsg('分岐！ どちらへ？');
+    setCmds(nexts.map(n=>({label:`→ ${cells[n].name}(${n})`,fn:()=>{setCmds([]);res(n);}})));
+  });
+}
+
+async function passGoal(p){
+  if(p.cpDone){
+    const landVal=cells.filter(c=>c.owner===p.id).reduce((s,c)=>s+c.price,0);
+    const bonus=lapBonus+Math.floor(landVal*.1);
+    p.gold+=bonus;lapBonus+=lapBonusInc;p.lap++;
+    setMsg(`⭐ <span style="color:var(--text-gold)">周回ボーナス +${bonus}G！</span>`);
+    addLog(`${p.name} 周回 +${bonus}G`);
+  } else {
+    setMsg('⭐ ゴール通過（CP未達）');
+  }
+  p.cpDone=false;updateUI();await wait(900);
+}
+
+async function landEvent(p){
+  const c=cells[p.pos];
+  if(c.type==='goal'){await passGoal(p);endTurn();return;}
+  if(c.type==='cp'){endTurn();return;}
+  if(c.type==='shop'){await shopEvent(p);return;}
+
+  if(c.type==='empty'){
+    setMsg(`空き地 <b>${c.name}</b><br>購入: <span style="color:var(--text-gold)">${c.price}G</span>`);
+    if(p.isAI){if(p.gold>=c.price)buyLand(p,c);else endTurn();return;}
+    if(p.gold>=c.price) setCmds([{label:`🏠 購入 ${c.price}G`,cls:'green',fn:()=>buyLand(p,c)},{label:'スルー',fn:endTurn}]);
+    else setCmds([{label:'資金不足',disabled:true,fn:()=>{}},{label:'スルー',fn:endTurn}]);
+    return;
+  }
+
+  if(c.type==='land'){
+    if(c.owner===p.id){
+      setMsg(`自分の土地 <span style="color:${ATTR_COLOR[c.attr]||'#aaa'}">${c.name}</span>`);
+      if(p.isAI){endTurn();return;}
+      setCmds([{label:'🐉 モンスター配置',cls:'purple',fn:()=>placeMonster(p,c)},{label:'スルー',fn:endTurn}]);
+      return;
+    }
+    const own=PLAYERS[c.owner];
+    if(!own){endTurn();return;}
+    const toll=p.hp<=0?c.toll*2:c.toll;
+    setMsg(`<span style="color:${own.color}">${own.name}</span> の土地！<br>通行料 <span style="color:var(--text-gold)">${toll}G</span>`);
+    if(p.isAI){
+      if(p.hp>0&&p.atk>c.toll) doBattle(p,c,own);
+      else payToll(p,c,own,p.hp<=0?'zero':'half');
+      return;
+    }
+    if(p.hp<=0) setCmds([{label:`HP0 強制 ${toll}G`,cls:'red',fn:()=>payToll(p,c,own,'zero')}]);
+    else setCmds([
+      {label:'⚔ 侵略する',cls:'red',fn:()=>doBattle(p,c,own)},
+      {label:`💰 半額 ${Math.floor(toll/2)}G`,cls:'blue',fn:()=>payToll(p,c,own,'half')},
+    ]);
+    return;
+  }
+  endTurn();
+}
+
+async function buyLand(p,c){
+  p.gold-=c.price;c.owner=p.id;c.type='land';
+  addLog(`${p.name} ${c.name}購入`);
+  setMsg(`🏠 <b>${c.name}</b>を購入！<br>モンスターを配置して属性を確定しよう`);
+  updateUI();draw();await wait(700);
+  if(p.isAI){autoPlaceMonster(p,c);endTurn();return;}
+  setCmds([{label:'🐉 モンスター配置',cls:'purple',fn:()=>placeMonster(p,c)},{label:'後で配置',fn:endTurn}]);
+}
+
+const MONSTERS=[
+  {name:'スライム',icon:'🟢',attr:'water',atk:4,def:1,hp:20},
+  {name:'ドラゴン',icon:'🐉',attr:'fire',atk:8,def:4,hp:40},
+  {name:'ゴブリン',icon:'👺',attr:'fire',atk:3,def:2,hp:18},
+  {name:'妖精',icon:'🧚',attr:'grass',atk:3,def:5,hp:22},
+  {name:'クラーケン',icon:'🦑',attr:'water',atk:6,def:3,hp:30},
+];
+
+function placeMonster(p,c){
+  showOverlay('モンスター配置','属性がこの土地の属性になります',
+    MONSTERS.map(m=>({
+      label:`${m.icon} ${m.name} ${ATTR_LABEL[m.attr]} ATK:${m.atk} DEF:${m.def}`,
+      cls:m.attr==='fire'?'red':m.attr==='water'?'blue':'green',
+      fn:()=>{c.attr=m.attr;c.monster=m;addLog(`${p.name} ${c.name}→${m.name}`);hideOverlay();draw();endTurn();}
+    })).concat([{label:'キャンセル',fn:()=>{hideOverlay();endTurn();}}])
+  );
+}
+
+function autoPlaceMonster(p,c){
+  const m=MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
+  c.attr=m.attr;c.monster=m;addLog(`${p.name} ${c.name}→${m.name}(自動)`);draw();
+}
+
+function payToll(p,c,own,type){
+  const paid=type==='half'?Math.floor(c.toll/2):type==='zero'?c.toll*2:c.toll;
+  p.gold=Math.max(0,p.gold-paid);own.gold+=paid;
+  if(type==='zero') p.hp=Math.max(1,Math.floor(p.maxHp/2));
+  addLog(`${p.name}→${own.name} ${paid}G`);
+  setMsg(`💰 通行料 <span style="color:var(--text-gold)">${paid}G</span> 支払い`);
+  updateUI();draw();setTimeout(endTurn,700);
+}
+
+async function doBattle(p,c,own){
+  const m=c.monster||{attr:own.attr,atk:own.atk,def:own.def,hp:own.hp};
+  const strong={fire:'grass',water:'fire',grass:'water'};
+  const mod=strong[p.attr]===c.attr?1.5:c.attr==='none'||p.attr===c.attr?1:0.7;
+  const fAtk=p.atk+(p.weapon?p.weapon.atk:0);
+  const fDef=p.def+(p.armor?p.armor.def:0);
+  const pDmg=Math.max(0,Math.floor(fAtk*mod)-m.def);
+  let mHp=m.hp;
+  if(p.isKue){p.hp=Math.max(0,p.hp-Math.max(0,m.atk-fDef));mHp=Math.max(0,mHp-pDmg);}
+  else mHp=Math.max(0,mHp-pDmg);
+  const win=mHp<=0,draw=!win&&p.hp>0;
+  if(win){
+    c.owner=p.id;
+    setMsg(`⚔ <span style="color:var(--grass)">侵略成功！</span> ${c.name}奪取`);
+    addLog(`${p.name} 侵略成功`);
+  } else if(draw){
+    p.hp=Math.max(1,Math.floor(p.hp/2));
+    p.gold=Math.max(0,p.gold-c.toll);own.gold+=c.toll;
+    setMsg(`⚔ 引き分け HP半分 +通行料${c.toll}G`);
+    addLog(`${p.name} 引き分け`);
+  } else {
+    p.hp=Math.max(1,Math.floor(p.hp/2));
+    p.gold=Math.max(0,p.gold-c.toll*2);own.gold+=c.toll*2;
+    setMsg(`⚔ <span style="color:var(--fire)">敗北…</span> HP半分 +通行料${c.toll*2}G`);
+    addLog(`${p.name} 敗北`);
+  }
+  updateUI();draw();await wait(1000);endTurn();
+}
+
+async function shopEvent(p){
+  const pool=[
+    {name:'鉄の剣',type:'weapon',atk:3,price:200,icon:'⚔️'},
+    {name:'魔法の杖',type:'weapon',atk:5,price:350,icon:'🪄'},
+    {name:'革の鎧',type:'armor',def:2,price:180,icon:'🥋'},
+    {name:'鉄の鎧',type:'armor',def:4,price:300,icon:'🛡️'},
+    {name:'ドラゴンカード',type:'monster',icon:'🐉',attr:'fire',atk:8,def:4,hp:40,price:400},
+  ];
+  const items=pool.sort(()=>Math.random()-.5).slice(0,3);
+  setMsg(`${p.icon} カードショップ！ レアアイテム登場`);
+  if(p.isAI){
+    const b=items.filter(it=>it.price<=p.gold).sort((a,b)=>b.price-a.price)[0];
+    if(b){p.gold-=b.price;if(b.type==='weapon')p.weapon=b;else if(b.type==='armor')p.armor=b;else p.monsters.push(b);addLog(`${p.name} ${b.name}購入`);}
+    endTurn();return;
+  }
+  showOverlay('🃏 カードショップ',
+    items.map(it=>`${it.icon} <b>${it.name}</b> — <span style="color:var(--text-gold)">${it.price}G</span>`).join('<br>'),
+    items.map(it=>({
+      label:`${it.icon} ${it.name} ${it.price}G`,
+      cls:p.gold>=it.price?'gold':'',disabled:p.gold<it.price,
+      fn:()=>{
+        p.gold-=it.price;
+        if(it.type==='weapon')p.weapon=it;else if(it.type==='armor')p.armor=it;else p.monsters.push(it);
+        addLog(`${p.name} ${it.name}購入`);hideOverlay();updateUI();endTurn();
+      }
+    })).concat([{label:'何も買わない',fn:()=>{hideOverlay();endTurn();}}])
+  );
+}
+
+async function endTurn(){
+  hideOverlay();
+  turnIndex=(turnIndex+1)%PLAYERS.length;
+  if(turnIndex===0) turnCount++;
+  updateUI();draw();
+  const p=PLAYERS[turnIndex];
+  setMsg(`${p.icon} <span style="color:${p.color}">${p.name}</span> のターン`);
+  if(p.isAI){await wait(600);await rollDice();}
+  else setCmds([{label:'🎲 ダイスを振る',cls:'green',fn:rollDice}]);
+}
+
+function showOverlay(title,body,btns){
+  document.getElementById('ovTitle').textContent=title;
+  document.getElementById('ovBody').innerHTML=body;
+  const bc=document.getElementById('ovBtns');bc.innerHTML='';
+  btns.forEach(b=>{
+    const el=document.createElement('button');
+    el.className='ov-btn '+(b.cls||'');
+    el.innerHTML=b.label;el.disabled=!!b.disabled;el.onclick=b.fn;
+    bc.appendChild(el);
+  });
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay(){document.getElementById('overlay').classList.remove('show');}
+
+resize();
+draw();updateUI();
+setMsg(`⭐ チヌクエスト スタート！<br>🐟 チヌのターンです`);
+</script>
+</body>
+</html>
