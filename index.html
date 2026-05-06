@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>チヌクエスト</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;
+  --border:#30363d;--border2:#58a6ff;
+  --text:#c9d1d9;--text-dim:#8b949e;--text-gold:#ffd700;
+  --fire:#ff6b35;--water:#58a6ff;--grass:#3fb950;
+  --hg:#22cc44;--hy:#ddcc00;--hr:#cc2200;
+  --cp:#f7c948;--p1:#58a6ff;--p2:#ff6b35;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;overflow-x:hidden;max-width:480px;margin:0 auto}
+
+/* ===== 画面切替 ===== */
+.screen{display:none}.screen.active{display:block}
+
+/* ===== 共通ボタン ===== */
+.btn{width:100%;padding:14px;border:2px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text-gold);cursor:pointer;font-family:'DotGothic16',monospace;font-size:14px;letter-spacing:1px;transition:all .15s;text-align:center;-webkit-user-select:none;user-select:none;display:block;margin-bottom:8px}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.3;pointer-events:none}
+.btn.green{border-color:var(--grass);color:var(--grass);background:#001a08}
+.btn.red{border-color:var(--fire);color:var(--fire);background:#1a0800}
+.btn.blue{border-color:var(--water);color:var(--water);background:#00081a}
+.btn.gold{border-color:var(--text-gold);color:var(--text-gold);background:#1a1400}
+.btn.purple{border-color:#9f7ae8;color:#c9a8ff;background:#100a1a}
+.btn.gray{border-color:var(--border);color:var(--text-dim);background:var(--bg2)}
+
+/* ===== パネル ===== */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.panel-title{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;text-transform:uppercase;font-family:'DotGothic16',monospace}
+
+/* ===== テキスト入力 ===== */
+.input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.input:focus{border-color:var(--border2)}
+.input::placeholder{color:var(--text-dim)}
+.input-label{font-size:11px;color:var(--text-dim);margin-bottom:5px;display:block}
+
+/* ===== タイトル画面 ===== */
+#titleScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#1a2030 0%,var(--bg) 70%)}
+.title-logo{font-family:'DotGothic16',monospace;font-size:32px;color:var(--text-gold);letter-spacing:6px;text-align:center;margin-bottom:6px;text-shadow:0 0 30px rgba(255,215,0,.3)}
+.title-sub{font-size:11px;color:var(--text-dim);letter-spacing:3px;margin-bottom:32px;text-align:center}
+.title-form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+
+/* ===== キャラ選択 ===== */
+.char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.char-btn{border:2px solid var(--border);border-radius:8px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg3);-webkit-user-select:none}
+.char-btn:active{transform:scale(.95)}
+.char-btn.selected-fire{border-color:var(--fire);background:#1a0800}
+.char-btn.selected-water{border-color:var(--water);background:#00081a}
+.char-btn.selected-grass{border-color:var(--grass);background:#001a08}
+.char-icon{font-size:28px;display:block;margin-bottom:3px;line-height:1.2}
+.char-name{font-size:10px;color:var(--text-dim)}
+.char-desc{font-size:9px;color:var(--text-dim);margin-top:2px;line-height:1.3}
+
+/* ===== ルームコード ===== */
+.room-code{font-family:'DotGothic16',monospace;font-size:36px;color:var(--text-gold);letter-spacing:8px;text-align:center;padding:16px;background:var(--bg3);border-radius:8px;border:2px solid var(--text-gold)}
+.room-code-copy{font-size:11px;color:var(--text-dim);text-align:center;margin-top:4px}
+
+/* ===== 待機画面 ===== */
+.player-list{display:flex;flex-direction:column;gap:8px}
+.player-entry{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)}
+.player-entry.ready{border-color:var(--grass)}
+.player-entry-icon{font-size:24px}
+.player-entry-info{flex:1}
+.player-entry-name{font-size:13px;font-weight:700}
+.player-entry-char{font-size:11px;color:var(--text-dim)}
+.player-entry-status{font-size:10px;font-family:'DotGothic16',monospace}
+.empty-slot{padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px dashed var(--border);text-align:center;font-size:11px;color:var(--text-dim)}
+
+/* ===== 管理者設定 ===== */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.setting-label{font-size:12px;color:var(--text-dim)}
+.setting-value{font-family:'DotGothic16',monospace;font-size:13px;color:var(--text-gold)}
+.setting-btns{display:flex;gap:4px}
+.mini-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text);cursor:pointer;font-size:11px;font-family:'DotGothic16',monospace}
+.mini-btn:active{background:var(--border)}
+.mini-btn.active{border-color:var(--text-gold);color:var(--text-gold)}
+
+/* ===== ゲーム画面 ===== */
+/* ステータスバー */
+.status-bar{background:var(--bg2);border-bottom:2px solid var(--border);padding:4px 6px;position:sticky;top:0;z-index:50;overflow-x:auto}
+.sbar-inner{display:flex;gap:4px;min-width:max-content}
+.pcard{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 7px;min-width:100px;transition:border-color .2s;cursor:pointer}
+.pcard.my-turn{border-color:var(--text-gold);box-shadow:0 0 8px rgba(255,215,0,.2)}
+.pcard.me{border-color:var(--water)}
+.pcard-top{display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.pcard-icon{font-size:16px;line-height:1}
+.pcard-name{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+.pcard-rank{font-family:'DotGothic16',monospace;font-size:10px;color:var(--text-gold);margin-left:auto}
+.pcard-row{font-size:9px;color:var(--text-dim);line-height:1.7;font-family:'DotGothic16',monospace}
+.pcard-row span{color:var(--text)}
+.turn-info{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 8px;font-family:'DotGothic16',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0}
+.turn-info b{font-size:13px;color:var(--text-gold);display:block}
+
+/* ボード */
+.board-area{background:#080c10;position:relative}
+#boardCanvas{display:block;width:100%}
+
+/* メッセージ */
+.msg-box{background:var(--bg2);border-top:2px solid var(--border2);border-bottom:1px solid var(--border);padding:10px 12px;font-family:'DotGothic16',monospace;font-size:13px;line-height:1.9;min-height:56px}
+.msg-cursor{animation:blink .6s step-end infinite;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ダイス */
+.dice-row{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px;background:var(--bg2)}
+.dice-face{font-size:42px;font-family:'DotGothic16',monospace;color:var(--text-gold);line-height:1}
+.sub-dice{font-size:28px;color:var(--cp)}
+
+/* コマンドエリア */
+.cmd-area{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg)}
+.cmd-area .btn{flex:1;min-width:120px;margin-bottom:0}
+
+/* ログ */
+.log-section{background:var(--bg2);border-top:1px solid var(--border)}
+.log-toggle{width:100%;padding:8px 12px;background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;display:flex;justify-content:space-between;font-family:'Noto Sans JP',sans-serif}
+.log-body{display:none;padding:6px 12px;max-height:100px;overflow-y:auto;font-size:10px;color:var(--text-dim);line-height:1.9}
+.log-body.open{display:block}
+
+/* ===== 戦闘画面 ===== */
+#battleScreen{background:var(--bg);min-height:100vh}
+.battle-header{background:var(--bg2);border-bottom:2px solid var(--fire);padding:10px 14px;font-family:'DotGothic16',monospace;font-size:13px;color:var(--fire);letter-spacing:2px}
+.battle-hud{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.bhud-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px}
+.bhud-box.player-side{border-color:var(--water)}
+.bhud-box.monster-side{border-color:var(--fire)}
+.bhud-name{font-size:11px;font-weight:700;margin-bottom:4px}
+.bhud-hp-wrap{height:8px;background:#111;border-radius:4px;overflow:hidden;margin-bottom:4px}
+.bhud-hp{height:100%;border-radius:4px;transition:width .5s,background .5s}
+.bhud-stats{font-size:10px;color:var(--text-dim);line-height:1.7}
+.bhud-stats span{color:var(--text)}
+.bhud-vs{font-family:'DotGothic16',monospace;font-size:16px;color:var(--text-dim);display:flex;align-items:center}
+
+/* フィールド */
+.battle-field{height:180px;background:linear-gradient(180deg,#050a14 0%,#0a1428 55%,#141e10 55%,#1a2814 100%);position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.sprite-player{position:absolute;left:15%;bottom:35%;font-size:60px;line-height:1;filter:drop-shadow(0 4px 12px rgba(88,166,255,.5));transition:transform .15s}
+.sprite-monster{position:absolute;right:15%;bottom:35%;font-size:68px;line-height:1;filter:drop-shadow(0 4px 12px rgba(255,107,53,.5))}
+@keyframes atk-p{0%{transform:translateX(0)}40%{transform:translateX(40px)}100%{transform:translateX(0)}}
+@keyframes atk-m{0%{transform:translateX(0)}40%{transform:translateX(-40px)}100%{transform:translateX(0)}}
+@keyframes hit{0%,100%{opacity:1}25%{opacity:.3;filter:drop-shadow(0 0 12px #ff0000)}75%{opacity:.6}}
+.dmg-pop{position:absolute;font-family:'DotGothic16',monospace;font-weight:bold;pointer-events:none;animation:pop .9s forwards;text-shadow:2px 2px 4px #000}
+@keyframes pop{0%{opacity:1;transform:translateY(0) scale(1.2)}100%{opacity:0;transform:translateY(-50px) scale(.8)}}
+
+/* 戦闘メッセージ・コマンド */
+.battle-msg{background:var(--bg2);border:2px solid var(--border2);padding:12px 14px;font-family:'DotGothic16',monospace;font-size:12px;line-height:2;min-height:62px}
+.battle-cmd{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg)}
+.battle-cmd .btn{flex:1;min-width:120px;margin-bottom:0}
+
+/* 戦闘結果 */
+.battle-result{text-align:center;padding:20px 12px}
+.result-banner{font-family:'DotGothic16',monospace;font-size:24px;letter-spacing:4px;margin-bottom:12px;animation:glow 1s ease-in-out infinite alternate}
+@keyframes glow{from{text-shadow:0 0 10px currentColor}to{text-shadow:0 0 30px currentColor,0 0 60px currentColor}}
+.result-win{color:var(--grass)}.result-lose{color:var(--fire)}.result-draw{color:var(--cp)}
+.result-detail{font-size:12px;color:var(--text-dim);line-height:2.2;margin-bottom:16px}
+
+/* ===== 売却画面 ===== */
+#sellScreen{min-height:100vh;background:var(--bg)}
+.sell-header{background:var(--bg2);border-bottom:2px solid var(--fire);padding:10px 14px}
+.sell-title{font-family:'DotGothic16',monospace;font-size:13px;color:var(--fire);letter-spacing:2px}
+.sell-desc{font-size:11px;color:var(--text-dim);margin-top:4px}
+.sell-list{padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:55vh}
+.sell-item{background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s}
+.sell-item.selected{border-color:var(--fire);background:#1a0800}
+.sell-footer{padding:10px;background:var(--bg);border-top:1px solid var(--border);position:sticky;bottom:0}
+.sell-status{font-size:11px;color:var(--text-dim);margin-bottom:8px;font-family:'DotGothic16',monospace}
+
+/* ===== 装備選択オーバーレイ ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:flex-end;justify-content:center;z-index:200}
+.overlay.show{display:flex}
+.overlay-sheet{background:var(--bg2);border-radius:16px 16px 0 0;border-top:3px solid var(--border2);padding:16px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.ov-title{font-family:'DotGothic16',monospace;font-size:14px;color:var(--text-gold);margin-bottom:10px;letter-spacing:2px}
+.ov-desc{font-size:11px;color:var(--text-dim);margin-bottom:12px;line-height:1.7}
+.ov-list{display:flex;flex-direction:column;gap:6px}
+.ov-btn{padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text);font-family:'DotGothic16',monospace;font-size:12px;cursor:pointer;text-align:left;width:100%;line-height:1.6}
+.ov-btn:active{opacity:.8}.ov-btn:disabled{opacity:.3;pointer-events:none}
+.ov-btn.green{border-color:var(--grass);color:var(--grass)}
+.ov-btn.red{border-color:var(--fire);color:var(--fire)}
+.ov-btn.gold{border-color:var(--text-gold);color:var(--text-gold)}
+.ov-btn.blue{border-color:var(--water);color:var(--water)}
+.ov-btn.purple{border-color:#9f7ae8;color:#c9a8ff}
+
+/* マスポップアップ */
+.cell-popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:150;padding:16px}
+.cell-popup.show{display:flex}
+.cell-popup-box{background:var(--bg2);border:2px solid var(--border2);border-radius:12px;padding:16px;width:100%;max-width:340px;font-size:12px}
+.cell-popup-title{font-family:'DotGothic16',monospace;font-size:14px;color:var(--text-gold);margin-bottom:10px}
+.cell-popup-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);color:var(--text-dim)}
+.cell-popup-row span{color:var(--text)}
+
+/* ===== 結果画面 ===== */
+#resultScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2030 0%,var(--bg) 70%)}
+.final-title{font-family:'DotGothic16',monospace;font-size:22px;color:var(--text-gold);letter-spacing:4px;text-align:center;margin-bottom:20px}
+.final-rank-list{width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.final-rank-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2)}
+.final-rank-item.rank1{border-color:var(--text-gold);background:#1a1400}
+.final-rank-num{font-family:'DotGothic16',monospace;font-size:20px;width:32px;text-align:center}
+.final-rank-icon{font-size:28px}
+.final-rank-info{flex:1}
+.final-rank-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.final-rank-assets{font-size:11px;color:var(--text-gold);font-family:'DotGothic16',monospace}
+</style>
+</head>
+<body>
+
+<!-- ===== タイトル画面 ===== -->
+<div class="screen active" id="titleScreen">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:0;background:radial-gradient(ellipse at 50% 0%,#1a2030 0%,var(--bg) 70%)">
+    <div class="title-logo">チヌクエスト</div>
+    <div class="title-sub">— CHINU QUEST —</div>
+
+    <div class="title-form">
+      <!-- 名前入力 -->
+      <div class="panel">
+        <div class="panel-title">プレイヤー情報</div>
+        <label class="input-label">プレイヤー名（最大8文字）</label>
+        <input class="input" id="nameInput" maxlength="8" placeholder="名前を入力">
+
+        <div style="margin-top:10px">
+          <label class="input-label">ルームコード（参加する場合）</label>
+          <input class="input" id="roomCodeInput" maxlength="4" placeholder="4桁のコード（新規作成は空白）" inputmode="numeric" pattern="[0-9]*">
+        </div>
+      </div>
+
+      <!-- キャラ選択 -->
+      <div class="panel">
+        <div class="panel-title">キャラクター選択</div>
+        <div class="char-grid" id="charGrid"></div>
+        <div id="charDetail" style="margin-top:10px;font-size:11px;color:var(--text-dim);line-height:1.7;min-height:36px"></div>
+      </div>
+
+      <button class="btn green" id="enterBtn" onclick="handleEnter()">▶ ゲームに参加する</button>
+      <div id="enterError" style="font-size:11px;color:var(--fire);text-align:center;min-height:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 管理者画面 ===== -->
+<div class="screen" id="adminScreen">
+  <div style="padding:16px;max-width:480px">
+    <div style="font-family:'DotGothic16',monospace;font-size:16px;color:var(--text-gold);text-align:center;letter-spacing:3px;margin:16px 0">👑 管理者設定</div>
+
+    <!-- ルームコード表示 -->
+    <div class="panel">
+      <div class="panel-title">ルームコード</div>
+      <div class="room-code" id="displayRoomCode">----</div>
+      <div class="room-code-copy">参加者にこのコードを伝えてください</div>
+    </div>
+
+    <!-- ゲーム設定 -->
+    <div class="panel">
+      <div class="panel-title">ゲーム設定</div>
+
+      <div class="setting-row">
+        <span class="setting-label">参加人数</span>
+        <div class="setting-btns">
+          <button class="mini-btn" onclick="setPlayers(2)" id="p2btn">2人</button>
+          <button class="mini-btn" onclick="setPlayers(3)" id="p3btn">3人</button>
+          <button class="mini-btn active" onclick="setPlayers(4)" id="p4btn">4人</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">目標総資産</span>
+        <div class="setting-btns">
+          <button class="mini-btn" onclick="setGoal(5000)" id="g5btn">5000</button>
+          <button class="mini-btn active" onclick="setGoal(10000)" id="g10btn">10000</button>
+          <button class="mini-btn" onclick="setGoal(20000)" id="g20btn">20000</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">マップ</span>
+        <span class="setting-value">スタンダード（18マス）</span>
+      </div>
+    </div>
+
+    <!-- 参加者一覧 -->
+    <div class="panel">
+      <div class="panel-title">参加者 <span id="playerCount" style="color:var(--text-gold)">1</span>/<span id="maxPlayers">4</span></div>
+      <div class="player-list" id="adminPlayerList"></div>
+    </div>
+
+    <button class="btn green" id="addAiBtn" onclick="addAI()">🤖 AIプレイヤーを追加</button>
+    <button class="btn gold" id="startGameBtn" onclick="adminStartGame()" disabled>▶ ゲームスタート</button>
+    <div id="adminError" style="font-size:11px;color:var(--fire);text-align:center;margin-top:4px;min-height:16px"></div>
+  </div>
+</div>
+
+<!-- ===== 待機画面 ===== -->
+<div class="screen" id="waitScreen">
+  <div style="padding:16px">
+    <div style="font-family:'DotGothic16',monospace;font-size:14px;color:var(--text-dim);text-align:center;letter-spacing:2px;margin:20px 0">⏳ ゲーム開始を待っています…</div>
+
+    <div class="panel">
+      <div class="panel-title">ルームコード</div>
+      <div class="room-code" id="waitRoomCode" style="font-size:28px">----</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">参加者</div>
+      <div class="player-list" id="waitPlayerList"></div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px">管理者がゲームを開始するまでお待ちください</div>
+  </div>
+</div>
+
+<!-- ===== ゲーム画面 ===== -->
+<div class="screen" id="gameScreen">
+  <!-- ステータスバー -->
+  <div class="status-bar" id="statusBar"></div>
+
+  <!-- ボード -->
+  <div class="board-area">
+    <canvas id="boardCanvas"></canvas>
+  </div>
+
+  <!-- メッセージ -->
+  <div class="msg-box" id="msgBox">チヌクエスト スタート！<span class="msg-cursor">█</span></div>
+
+  <!-- ダイス -->
+  <div class="dice-row">
+    <div class="dice-face" id="diceDisp">🎲</div>
+    <div class="sub-dice" id="subDiceDisp" style="display:none"></div>
+  </div>
+
+  <!-- コマンド -->
+  <div class="cmd-area" id="cmdArea">
+    <button class="btn gray" disabled>接続中…</button>
+  </div>
+
+  <!-- ログ -->
+  <div class="log-section">
+    <button class="log-toggle" onclick="toggleLog()">
+      <span>📜 ゲームログ</span>
+      <span id="logArrow">▼</span>
+    </button>
+    <div class="log-body" id="logBody"></div>
+  </div>
+</div>
+
+<!-- ===== 戦闘画面 ===== -->
+<div class="screen" id="battleScreen">
+  <div class="battle-header" id="battleHeader">⚔ 戦闘</div>
+
+  <div class="battle-hud">
+    <div class="bhud-box player-side">
+      <div class="bhud-name" style="color:var(--water)" id="b-pname">プレイヤー</div>
+      <div class="bhud-hp-wrap"><div class="bhud-hp" id="b-php" style="width:100%;background:var(--hg)"></div></div>
+      <div class="bhud-stats">
+        HP基礎:<span id="b-pbhp">—</span> 加算:<span id="b-pahp">—</span><br>
+        ATK:<span id="b-patk">—</span>
+      </div>
+    </div>
+    <div class="bhud-vs">VS</div>
+    <div class="bhud-box monster-side">
+      <div class="bhud-name" style="color:var(--fire)" id="b-mname">モンスター</div>
+      <div class="bhud-hp-wrap"><div class="bhud-hp" id="b-mhp" style="width:100%;background:var(--hg)"></div></div>
+      <div class="bhud-stats">
+        HP:<span id="b-mhpnum">—</span>/<span id="b-mhpmax">—</span><br>
+        ATK:<span id="b-matk">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="battle-field" id="battleField">
+    <div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(180deg,#141e10,#0d1608);border-top:2px solid #2a3a20"></div>
+    <div class="sprite-player" id="spritePlayer">🐟</div>
+    <div class="sprite-monster" id="spriteMonster">👾</div>
+  </div>
+
+  <div class="battle-msg" id="battleMsg">▼<span class="msg-cursor">█</span></div>
+  <div class="battle-cmd" id="battleCmd"></div>
+  <div class="battle-result" id="battleResult" style="display:none">
+    <div class="result-banner" id="resultBanner"></div>
+    <div class="result-detail" id="resultDetail"></div>
+    <div class="battle-cmd" id="resultCmd" style="justify-content:center"></div>
+  </div>
+</div>
+
+<!-- ===== 売却画面 ===== -->
+<div class="screen" id="sellScreen">
+  <div class="sell-header">
+    <div class="sell-title">💸 ゴールド不足！ 土地を売却してください</div>
+    <div class="sell-desc" id="sellDesc"></div>
+  </div>
+  <div class="sell-list" id="sellList"></div>
+  <div class="sell-footer">
+    <div class="sell-status" id="sellStatus"></div>
+    <button class="btn green" id="sellDoneBtn" onclick="finishSell()" disabled>✔ 売却を確定する</button>
+  </div>
+</div>
+
+<!-- ===== 結果画面 ===== -->
+<div class="screen" id="resultScreen">
+  <div class="final-title">🏆 ゲーム終了</div>
+  <div class="final-rank-list" id="finalRankList"></div>
+  <button class="btn gray" style="max-width:340px" onclick="location.reload()">▶ タイトルに戻る</button>
+</div>
+
+<!-- オーバーレイ（装備選択・スペル選択など） -->
+<div class="overlay" id="overlay">
+  <div class="overlay-sheet">
+    <div class="ov-title" id="ovTitle"></div>
+    <div class="ov-desc" id="ovDesc"></div>
+    <div class="ov-list" id="ovList"></div>
+  </div>
+</div>
+
+<!-- マス詳細ポップアップ -->
+<div class="cell-popup" id="cellPopup" onclick="closeCellPopup()">
+  <div class="cell-popup-box" onclick="event.stopPropagation()">
+    <div class="cell-popup-title" id="cpTitle"></div>
+    <div id="cpRows"></div>
+    <button class="btn gray" style="margin-top:10px" onclick="closeCellPopup()">閉じる</button>
+  </div>
+</div>
+
+<script>
+// ===== Firebase SDK =====
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, push, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ===== firebase.js =====
+// Firebase Realtime Database 接続・同期
+
+import {
+  getDatabase, ref, set, get, onValue, update, push, remove, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC9ncbemina3ur2F-e7vX07OtqiPEu0EmE",
+  authDomain: "chinuquest-87b81.firebaseapp.com",
+  databaseURL: "https://chinuquest-87b81-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chinuquest-87b81",
+  storageBucket: "chinuquest-87b81.firebasestorage.app",
+  messagingSenderId: "546856004041",
+  appId: "1:546856004041:web:1bfc48e4d7d6418324a018"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// ===== 匿名ログイン =====
+function loginAnonymously() {
+  return signInAnonymously(auth);
+}
+
+function onAuthReady(cb) {
+  return onAuthStateChanged(auth, cb);
+}
+
+// ===== ルーム操作 =====
+
+// 4桁ルームコード生成
+function generateRoomCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+// ルーム作成（管理者）
+async function createRoom(roomCode, config) {
+  await set(ref(db, `rooms/${roomCode}`), {
+    config,
+    status: 'waiting', // waiting / playing / finished
+    turn: { uid: null, count: 0 },
+    cells: initCells(),
+    players: {},
+    log: []
+  });
+}
+
+// ルーム参加
+async function joinRoom(roomCode, uid, playerData) {
+  await set(ref(db, `rooms/${roomCode}/players/${uid}`), playerData);
+}
+
+// ルーム存在確認
+async function roomExists(roomCode) {
+  const snap = await get(ref(db, `rooms/${roomCode}`));
+  return snap.exists();
+}
+
+// ルーム情報取得（1回）
+async function getRoom(roomCode) {
+  const snap = await get(ref(db, `rooms/${roomCode}`));
+  return snap.exists() ? snap.val() : null;
+}
+
+// ルームをリアルタイム監視
+function watchRoom(roomCode, cb) {
+  return onValue(ref(db, `rooms/${roomCode}`), snap => {
+    if (snap.exists()) cb(snap.val());
+  });
+}
+
+// プレイヤー情報をリアルタイム監視
+function watchPlayers(roomCode, cb) {
+  return onValue(ref(db, `rooms/${roomCode}/players`), snap => {
+    cb(snap.exists() ? snap.val() : {});
+  });
+}
+
+// ゲーム状態更新
+async function updateGameState(roomCode, updates) {
+  await update(ref(db, `rooms/${roomCode}`), updates);
+}
+
+// プレイヤー状態更新
+async function updatePlayer(roomCode, uid, updates) {
+  await update(ref(db, `rooms/${roomCode}/players/${uid}`), updates);
+}
+
+// マス状態更新
+async function updateCell(roomCode, cellId, updates) {
+  await update(ref(db, `rooms/${roomCode}/cells/${cellId}`), updates);
+}
+
+// ターン更新
+async function updateTurn(roomCode, uid, count) {
+  await update(ref(db, `rooms/${roomCode}/turn`), { uid, count });
+}
+
+// ログ追加
+async function addLog(roomCode, message) {
+  await push(ref(db, `rooms/${roomCode}/log`), {
+    msg: message,
+    ts: Date.now()
+  });
+}
+
+// ゲーム開始
+async function startGame(roomCode, firstPlayerUid) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    status: 'playing',
+    'turn/uid': firstPlayerUid,
+    'turn/count': 1
+  });
+}
+
+// ===== 18マス初期データ =====
+function initCells() {
+  const cells = {};
+  for (let i = 0; i < 18; i++) {
+    let type = 'empty';
+    if (i === 0)  type = 'goal';
+    else if (i === 9) type = 'cp';
+    else if (i === 3 || i === 13) type = 'shop';
+    cells[i] = {
+      id: i,
+      type,
+      attr: 'none',
+      owner: null,
+      monster: null,
+      monsterEquip: null,
+      level: 1,
+      name: { goal: 'ゴール', cp: 'CP', shop: 'ショップ' }[type] || `マス${i}`,
+      investedCost: 0, // 投下資本（購入代+LvUP代）
+      flags: {}        // モロ引っ掛け等の特殊フラグ
+    };
+  }
+  return cells;
+}
+
+// ===== gamedata.js =====
+// チヌクエスト 全データ定義
+
+// ===== キャラクター =====
+const CHARS = [
+  {
+    id: 'chinu', name: 'チヌ', icon: '🐟', attr: 'fire',
+    baseAtk: 5, baseHp: 50,
+    lapAtk: 3, lapHp: 5,
+    special: '周回ごとに全ステータス+1（他キャラより多く成長）',
+    desc: 'バランス型・先攻'
+  },
+  {
+    id: 'kue', name: 'クエ', icon: '🐡', attr: 'fire',
+    baseAtk: 7, baseHp: 50,
+    lapAtk: 4, lapHp: 6,
+    special: '必ず後攻になる。周回成長ボーナスが多い',
+    desc: '重戦士型・後攻',
+    isKue: true
+  },
+  {
+    id: 'aji', name: 'アジ', icon: '🐠', attr: 'water',
+    baseAtk: 3, baseHp: 30,
+    lapAtk: 3, lapHp: 5,
+    special: '1ターンに2回行動できる',
+    desc: '俊敏型・2ターン行動'
+  },
+  {
+    id: 'fugu', name: 'フグ', icon: '🐡', attr: 'water',
+    baseAtk: 3, baseHp: 50,
+    lapAtk: 3, lapHp: 5,
+    special: 'ターン終了後に相手の最大HPの20%追加ダメージ（毒）',
+    desc: 'HP特化型・毒攻撃'
+  },
+  {
+    id: 'hitode', name: 'ヒトデ', icon: '⭐', attr: 'grass',
+    baseAtk: 4, baseHp: 40,
+    lapAtk: 3, lapHp: 5,
+    special: '初期ゴールド+500G・周回ボーナス+10%',
+    desc: '商人型',
+    startGoldBonus: 250
+  },
+  {
+    id: 'usagi', name: 'うさぎ', icon: '🐰', attr: 'grass',
+    baseAtk: 4, baseHp: 40,
+    lapAtk: 3, lapHp: 5,
+    special: 'ダイス3回に1回ヘイスト（+1〜3マス）',
+    desc: '幸運型・ヘイスト'
+  }
+];
+
+// ===== 属性 =====
+const ATTR = {
+  fire:  { label: '🔥火', color: '#ff6b35', strong: 'grass', weak: 'water' },
+  water: { label: '💧水', color: '#58a6ff', strong: 'fire',  weak: 'grass' },
+  grass: { label: '🌿草', color: '#3fb950', strong: 'water', weak: 'fire'  },
+  none:  { label: '無属性', color: '#888',  strong: null,   weak: null    }
+};
+
+function atkMod(attackerAttr, defenderAttr) {
+  if (!attackerAttr || !defenderAttr || defenderAttr === 'none') return 1.0;
+  if (ATTR[attackerAttr]?.strong === defenderAttr) return 1.5;
+  if (ATTR[attackerAttr]?.weak   === defenderAttr) return 0.7;
+  return 1.0;
+}
+
+// ===== 武器カード =====
+const WEAPONS = [
+  {
+    id: 'knife', name: '🗡 ナイフ', atk: 10, cost: 0,
+    desc: 'ATK +10', initial: true
+  },
+  {
+    id: 'missile', name: '🚀 プ〇ウスミサイル', atk: 20, addHp: 20, cost: 100,
+    desc: 'ATK+20 / 加算HP+20（戦闘後消滅）。戦闘後に最大基礎HPの30%自傷',
+    afterBattle: (p) => {
+      const dmg = Math.floor(p.baseMaxHp * 0.3);
+      return { selfDmg: dmg, msg: `🚀 プ〇ウスミサイルの自傷！ 基礎HP −${dmg}` };
+    }
+  },
+  {
+    id: 'pattsmo', name: '🗡 パッツモソード', atk: 20, cost: 80,
+    desc: 'ATK+20。防御側装備で先制逆転。攻撃側装備で相手の防御パッツモを相殺',
+    isPattsmo: true
+  },
+  {
+    id: 'shikkoku', name: '⚫ しっこくのつるぎ', atk: 50, cost: 100,
+    desc: 'ATK+50。戦闘終了後にHP強制1',
+    afterBattle: () => ({ forceHp1: true, msg: '⚫ しっこくのつるぎ… HPが1になった' })
+  },
+  {
+    id: 'moroba', name: '⚔ 諸刃の剣', atk: 30, reductHp: 30, cost: 0,
+    desc: 'ATK+30 / 減算HP−30。戦闘開始時に現在HPから30を減算。0以下で強制敗北',
+    isMoroba: true
+  }
+];
+
+// ===== 防具カード =====
+const ARMORS = [
+  {
+    id: 'board', name: '🪵 木の板', addHp: 10, cost: 0,
+    desc: '加算HP +10', initial: true
+  },
+  {
+    id: 'dungeon_suit', name: '🤿 ダン〇ンのスーツ', addHp: 15, cost: 20,
+    desc: '加算HP +15'
+  },
+  {
+    id: 'marugila', name: '👛 マルジ〇ラの財布', addHp: 10, cost: 50,
+    desc: '加算HP+10。攻撃側→通行料半額 / 防御側→通行料2倍',
+    isMarugila: true
+  },
+  {
+    id: 'cardboard', name: '📦 アマ〇ンの段ボール', addHp: 5, cost: 0,
+    desc: '加算HP+5。生存時にランダムカード1枚入手（満杯→+100G）',
+    isCardboard: true
+  }
+];
+
+// ===== スペルカード =====
+const SPELLS = [
+  {
+    id: 'pe_staff', name: '🪄 ペーの杖', cost: 50,
+    desc: '最終ATK×1.5倍（次のゴールまで）',
+    duration: 'nextGoal', effect: 'atkBoost', value: 1.5
+  },
+  {
+    id: 'haste', name: '⚡ ヘイスト', cost: 30,
+    desc: 'サブダイス（1〜3）追加（2ターン）',
+    duration: 2, effect: 'haste'
+  },
+  {
+    id: 'gaisen', name: '🏆 凱旋', cost: 0,
+    desc: '次の周回ボーナス×1.5倍',
+    duration: 'nextGoal', effect: 'lapBoost', value: 1.5
+  },
+  {
+    id: 'bukomi', name: '🎲 ぶっこみ', cost: 100,
+    desc: '手持ちモンスターをランダムな空き地に召喚。空き地なし→+300G',
+    duration: 'instant', effect: 'deployMonster'
+  },
+  {
+    id: 'butsukari', name: '👴 ぶつかりおじさん', cost: 60,
+    desc: '敵モンスター3体にランダムで基礎HP−7。1体なら×3',
+    duration: 'instant', effect: 'damageMonsters', value: 7, count: 3
+  },
+  {
+    id: 'gyuho', name: '🐢 牛歩戦術', cost: 50,
+    desc: '対象のダイスを1〜2に制限（2ターン）',
+    duration: 2, effect: 'slowDice', targetPlayer: true
+  },
+  {
+    id: 'ikasama', name: '🎰 イカサマのダイス', cost: 90,
+    desc: '対象のダイスを指定した目にする（次の1回）',
+    duration: 1, effect: 'fixDice', targetPlayer: true
+  },
+  {
+    id: 'jagian', name: '👊 ジャ〇アンの理屈', cost: 120,
+    desc: '対象プレイヤーのカードを1枚ランダムで奪う',
+    duration: 'instant', effect: 'stealCard', targetPlayer: true
+  },
+  {
+    id: 'betaori', name: '🙅 ベタオリ', cost: 100,
+    desc: '選んだモンスターが攻撃しない代わりに受けるダメージ半減（次の戦闘か通行料まで）',
+    duration: 'nextBattle', effect: 'betaori', targetMonster: true
+  },
+  {
+    id: 'morohiki', name: '🪤 モロ引っ掛け', cost: 100,
+    desc: '選んだモンスターのマスを通過するプレイヤーを強制停止（1回）。自分は通行料なし',
+    duration: 'once', effect: 'morohiki', targetMonster: true
+  },
+  {
+    id: 'manjiro', name: '💉 マン〇ャロ', cost: 60,
+    desc: '3ターン間、毎ターン終了時にHP+20%・ATK+5。終了後ATK上昇消滅',
+    duration: 3, effect: 'manjiro', targetSelfOrMonster: true
+  }
+];
+
+// ===== モンスターカード =====
+const MONSTERS = [
+  // 初期ゴブリン
+  { id: 'goblin_fire',  name: '🔥ゴブリン', attr: 'fire',  atk: 3,  baseHp: 10, maxHp: 10, cost: 0, initial: true },
+  { id: 'goblin_water', name: '💧ゴブリン', attr: 'water', atk: 3,  baseHp: 10, maxHp: 10, cost: 0, initial: true },
+  { id: 'goblin_grass', name: '🌿ゴブリン', attr: 'grass', atk: 3,  baseHp: 10, maxHp: 10, cost: 0, initial: true },
+
+  // 🔥 火属性
+  {
+    id: 'heroma', name: '🦕 へ〇ま竜', attr: 'fire', atk: 15, baseHp: 40, maxHp: 40, cost: 70,
+    desc: '戦闘終了後に敗者の最大基礎HP −20%（永続）。相打ち時→土地が更地に。通行料なし',
+    onBattleEnd: 'heroma_debuff',
+    onDraw: 'heroma_draw' // 相打ち処理
+  },
+  {
+    id: 'kaenbin', name: '🔥 火炎瓶男', attr: 'fire', atk: 20, baseHp: 25, maxHp: 25, cost: 55,
+    desc: '戦闘終了後に与えたダメージの15%を追加で基礎HPに',
+    onBattleEnd: 'kaenbin_extra'
+  },
+  {
+    id: 'hidauruma', name: '🔥 火だるま', attr: 'fire', atk: 10, baseHp: 30, maxHp: 30, cost: 50,
+    desc: '戦闘終了後に自己の基礎HPを30%回復',
+    onBattleEnd: 'hidauruma_heal'
+  },
+  {
+    id: 'salary', name: '💼 サラリーマンダー', attr: 'fire', atk: 10, baseHp: 25, maxHp: 25, cost: 30,
+    desc: '戦闘終了後に土地所有者が80G獲得',
+    onBattleEnd: 'salary_gold'
+  },
+  {
+    id: 'kaentake', name: '🍄 カエンタケ', attr: 'fire', atk: 15, baseHp: 20, maxHp: 20, cost: 20,
+    desc: '先制攻撃で相手を毒状態にする',
+    firstStrike: true, onFirstStrike: 'kaentake_poison'
+  },
+
+  // 💧 水属性
+  {
+    id: 'hedoro', name: '🟤 ヘドロ男', attr: 'water', atk: 15, baseHp: 30, maxHp: 30, cost: 20,
+    desc: '攻撃後に相手を毒状態にする',
+    onAttack: 'hedoro_poison'
+  },
+  {
+    id: 'tamakai', name: '🐟 タマカイ', attr: 'water', atk: 25, baseHp: 40, maxHp: 40, cost: 60,
+    desc: '攻撃終了後に土地所有者の手持ちG −5%（デメリット持ち）',
+    onBattleEnd: 'tamakai_penalty'
+  },
+  {
+    id: 'minato', name: '👩 港区女子', attr: 'water', atk: 30, baseHp: 40, maxHp: 40, cost: 90,
+    desc: '通行料×1.3倍。攻撃後に侵略者のカードを1枚ランダムで奪う',
+    tollMod: 1.3, onAttack: 'minato_steal'
+  },
+  {
+    id: 'sealion', name: '🦁 シーライオン', attr: 'water', atk: 15, baseHp: 25, maxHp: 25, cost: 15,
+    desc: '戦闘終了後に所有者の手持ちGが −50〜+50G ランダム変動',
+    onBattleEnd: 'sealion_random'
+  },
+  {
+    id: 'iyashi', name: '🌸 いやし系', attr: 'water', atk: 5, baseHp: 20, maxHp: 20, cost: 15,
+    desc: '戦闘終了後に所有者の全モンスターの基礎HPを15%回復',
+    onBattleEnd: 'iyashi_heal'
+  },
+
+  // 🌿 草属性
+  {
+    id: 'channeler', name: '💻 〇ちゃんねらー', attr: 'grass', atk: 15, baseHp: 10, maxHp: 10, cost: 25,
+    desc: '戦闘開始時に35%の確率でランダムな空き地に増殖（元の土地にも残る）',
+    onBattleStart: 'channeler_clone'
+  },
+  {
+    id: 'kusamono', name: '🥷 草の者', attr: 'grass', atk: 20, baseHp: 20, maxHp: 20, cost: 40,
+    desc: '防御側でも常に先制攻撃できる',
+    alwaysFirstStrike: true
+  },
+  {
+    id: 'yasugi', name: '🌲 屋〇杉', attr: 'grass', atk: 10, baseHp: 50, maxHp: 50, cost: 150,
+    desc: '特殊効果なし。高耐久の壁モンスター'
+  },
+  {
+    id: 'fushigibana', name: '🌸 不思議花', attr: 'grass', atk: 20, baseHp: 35, maxHp: 35, cost: 100,
+    desc: '与えたダメージの30%を自己の基礎HPとして回復',
+    onAttack: 'fushigibana_drain'
+  },
+  {
+    id: 'saboriter', name: '🌵 サボリーテンダー', attr: 'grass', atk: 45, baseHp: 25, maxHp: 25, cost: 75,
+    desc: '50%の確率で攻撃しない（完全スキップ）',
+    skipChance: 0.5
+  }
+];
+
+// モンスターIDで検索
+function getMonster(id) {
+  return MONSTERS.find(m => m.id === id);
+}
+
+// キャラIDで検索
+function getChar(id) {
+  return CHARS.find(c => c.id === id);
+}
+
+// ===== 通行料計算 =====
+function calcToll(cell, monster = null) {
+  const base = 50 * Math.pow(1.5, (cell.level || 1) - 1);
+  const monsterMod = monster?.tollMod || 1;
+  return Math.floor(base * monsterMod);
+}
+
+// ===== 土地資産価値計算 =====
+function landAssetValue(cell, allCells, ownerId) {
+  if (!cell || cell.owner !== ownerId || cell.type !== 'land') return 0;
+  const base = cell.investedCost || 100;
+  const bonus = chainBonus(cell.attr, allCells, ownerId);
+  return Math.floor(base * (1 + bonus));
+}
+
+// ===== 連鎖ボーナス =====
+function chainBonus(attr, allCells, ownerId) {
+  if (!attr || attr === 'none') return 0;
+  const count = Object.values(allCells).filter(
+    c => c.owner === ownerId && c.attr === attr && c.type === 'land'
+  ).length;
+  if (count >= 5) return 0.4;
+  if (count >= 4) return 0.3;
+  if (count >= 3) return 0.2;
+  if (count >= 2) return 0.1;
+  return 0;
+}
+
+// ===== 総資産計算 =====
+function totalAssets(player, allCells) {
+  const landVal = Object.values(allCells || {}).filter(
+    c => c.owner === player.uid && c.type === 'land'
+  ).reduce((sum, c) => sum + landAssetValue(c, allCells, player.uid), 0);
+  return (player.gold || 0) + landVal;
+}
+
+// ===== 隣接ボーナス =====
+function hasAdjacentBonus(cell, allCells, N = 18) {
+  const id = cell.id;
+  return Object.values(allCells).some(c =>
+    c.id !== id && c.owner === cell.owner && c.type === 'land' &&
+    (Math.abs(c.id - id) === 1 || Math.abs(c.id - id) === N - 1)
+  );
+}
+
+// ===== 売却価格 =====
+function sellPrice(cell) {
+  return Math.floor((cell.investedCost || 100) * 0.7);
+}
+
+// ===== プレイヤー初期データ =====
+function createPlayerData(uid, name, charId, isAdmin = false) {
+  const char = getChar(charId);
+  if (!char) throw new Error(`Unknown char: ${charId}`);
+
+  const goblinAttr = char.attr;
+  const goblinId = `goblin_${goblinAttr}`;
+  const goblin = getMonster(goblinId);
+
+  return {
+    uid,
+    name,
+    charId,
+    icon: char.icon,
+    attr: char.attr,
+    color: { fire: '#ff6b35', water: '#58a6ff', grass: '#3fb950' }[char.attr] || '#888',
+    isAdmin,
+    isAI: false,
+
+    // ステータス
+    baseAtk: char.baseAtk,
+    baseMaxHp: char.baseHp,
+    baseHp: char.baseHp,   // 現在の基礎HP
+    addHp: 0,              // 加算HP（土地Lv・防具）
+    reductHp: 0,           // 減算HP（諸刃の剣等）
+
+    // ゴールド
+    gold: 250 + (char.startGoldBonus || 0),
+    landAssets: 0,
+
+    // 位置
+    pos: 0,
+    lap: 0,
+    cpDone: false,
+
+    // 装備・カード
+    weapons: [{ ...WEAPONS.find(w => w.id === 'knife') }],
+    armors:  [{ ...ARMORS.find(a => a.id === 'board') }],
+    spells:  [],
+    monsters: [
+      { ...goblin, currentHp: goblin.baseHp },
+      { ...goblin, currentHp: goblin.baseHp }
+    ],
+
+    // 状態フラグ
+    effects: {
+      poisoned: false,
+      atkBoost: null,    // { value, until: 'nextGoal' }
+      lapBoost: null,    // { value, until: 'nextGoal' }
+      haste: 0,          // 残りターン数
+      slowDice: 0,       // 残りターン数
+      fixDice: null,     // 指定ダイス目
+      manjiro: null,     // { turns, targetMonsterIdx }
+    },
+
+    lapCount: 0,         // 周回数
+    diceRollCount: 0,    // うさぎのヘイスト判定用
+    ready: false,        // ゲーム開始準備完了フラグ
+    isAlive: true,
+  };
+}
+
+// AI プレイヤー
+function createAIPlayer(charId) {
+  const char = getChar(charId);
+  const data = createPlayerData(`ai_${charId}`, `${char.name}(AI)`, charId, false);
+  data.isAI = true;
+  return data;
+}
+
+// ===== battle.js =====
+// チヌクエスト 戦闘システム
+
+
+// ===== 先制判定 =====
+function getFirstStrike(attacker, defender, attackerWeapon, defenderWeapon, defenderMonster) {
+  // 草の者は常に先制（防御側）
+  if (defenderMonster?.alwaysFirstStrike) return 'defender';
+  // カエンタケは先制（防御側）
+  if (defenderMonster?.firstStrike) return 'defender';
+  // クエは後攻（攻撃側としてデメリット）
+  if (attacker.charId === 'kue') return 'defender';
+  // 防御側がパッツモソード
+  if (defenderWeapon?.isPattsmo) {
+    // 攻撃側もパッツモなら相殺
+    if (attackerWeapon?.isPattsmo) return 'attacker';
+    return 'defender';
+  }
+  return 'attacker';
+}
+
+// ===== ダメージ計算 =====
+function calcDamage(atk, attackerAttr, defenderAttr) {
+  const mod = atkMod(attackerAttr, defenderAttr);
+  return Math.max(1, Math.floor(atk * mod));
+}
+
+// ===== プレイヤーの合計ATK =====
+function playerTotalAtk(player, weapon) {
+  let atk = player.baseAtk + (weapon?.atk || 0);
+  // ペーの杖効果
+  if (player.effects?.atkBoost) atk = Math.floor(atk * player.effects.atkBoost.value);
+  return atk;
+}
+
+// ===== プレイヤーの現在HP（基礎+加算-減算）=====
+function playerCurrentHp(player) {
+  return player.baseHp + player.addHp - player.reductHp;
+}
+
+// ===== HPにダメージを与える（加算から先に削る）=====
+function applyDamage(player, damage) {
+  let remaining = damage;
+  let newAddHp = player.addHp;
+  let newBaseHp = player.baseHp;
+
+  if (newAddHp > 0) {
+    const fromAdd = Math.min(remaining, newAddHp);
+    newAddHp -= fromAdd;
+    remaining -= fromAdd;
+  }
+  if (remaining > 0) {
+    newBaseHp = Math.max(0, newBaseHp - remaining);
+  }
+
+  return { baseHp: newBaseHp, addHp: newAddHp };
+}
+
+// ===== 戦闘シミュレーション =====
+function simulateBattle(attacker, defender, options = {}) {
+  const {
+    attackerWeapon = null,
+    attackerArmor  = null,
+    defenderMonster = null,
+    defenderWeapon = null, // モンスター装備
+    cell = null,
+    allCells = {},
+    N = 18
+  } = options;
+
+  const log = [];
+
+  // 諸刃の剣チェック（攻撃側）
+  if (attackerWeapon?.isMoroba) {
+    const hp = playerCurrentHp(attacker);
+    if (hp - 30 <= 0) {
+      return {
+        result: 'attacker_forfeit',
+        log: ['⚔ 諸刃の剣の反動で戦闘開始前に力尽きた…'],
+        attackerHpAfter: 0,
+        defenderHpAfter: defenderMonster?.currentHp || defender?.baseHp || 0
+      };
+    }
+  }
+
+  // 初期HPセットアップ
+  let aBaseHp   = attacker.baseHp;
+  let aAddHp    = attacker.addHp + (attackerArmor?.addHp || 0) + (attackerWeapon?.addHp || 0);
+  let aReductHp = attackerWeapon?.isMoroba ? 30 : 0;
+  let mHp       = defenderMonster ? defenderMonster.currentHp : defender?.baseHp || 0;
+  const mMaxHp  = defenderMonster ? defenderMonster.maxHp : defender?.baseMaxHp || mHp;
+
+  // 攻撃力
+  const aAtk = playerTotalAtk(attacker, attackerWeapon);
+  const mAtk = (() => {
+    let base = defenderMonster?.atk || defender?.baseAtk || 0;
+    // モンスター装備武器
+    if (defenderWeapon) base += defenderWeapon.atk || 0;
+    // 隣接ボーナス
+    if (cell && allCells) {
+      const adj = Object.values(allCells).some(c =>
+        c.id !== cell.id && c.owner === cell.owner && c.type === 'land' &&
+        (Math.abs(c.id - cell.id) === 1 || Math.abs(c.id - cell.id) === N - 1)
+      );
+      if (adj) base = Math.floor(base * 1.5);
+    }
+    // ベタオリ
+    if (cell?.flags?.betaori) return 0;
+    return base;
+  })();
+
+  const defAttr  = cell?.attr || defenderMonster?.attr || 'none';
+  const atkAttrA = attacker.attr;
+
+  // 諸刃の剣：開始時に減算
+  aBaseHp = Math.max(0, aBaseHp - aReductHp);
+
+  // 先制判定
+  const first = getFirstStrike(attacker, defender || {}, attackerWeapon, defenderWeapon, defenderMonster);
+  log.push(`先攻: ${first === 'attacker' ? attacker.name : defenderMonster?.name || '守り手'}`);
+
+  // 〇ちゃんねらー：35%で増殖（戦闘開始時）
+  let channelerCloned = false;
+  if (defenderMonster?.id === 'channeler' || defenderMonster?.onBattleStart === 'channeler_clone') {
+    if (Math.random() < 0.35) {
+      channelerCloned = true;
+      log.push('💻 〇ちゃんねらーが空き地に増殖した！（そのまま戦闘続行）');
+    }
+  }
+
+  // サボリーテンダー：50%でスキップ
+  let saboriterSkip = false;
+  if (defenderMonster?.skipChance && Math.random() < defenderMonster.skipChance) {
+    saboriterSkip = true;
+    log.push('🌵 サボリーテンダーはサボって攻撃しなかった！');
+  }
+
+  let aDmg = 0; // 攻撃側がモンスターに与えたダメージ
+  let mDmg = 0; // 守り側がプレイヤーに与えたダメージ
+
+  const doAttackerAttack = () => {
+    aDmg = calcDamage(aAtk, atkAttrA, defAttr);
+    // 不思議花：与えたダメージの30%を自己回復
+    if (defenderMonster?.onAttack === 'fushigibana_drain') {
+      const heal = Math.floor(aDmg * 0.3);
+      mHp = Math.min(mMaxHp, mHp + heal);
+      log.push(`🌸 不思議花が ${heal} 回復！`);
+    }
+    mHp = Math.max(0, mHp - aDmg);
+    log.push(`${attacker.name} の攻撃！ ${aDmg} ダメージ → 残りHP ${mHp}`);
+    // ヘドロ男：攻撃後に毒
+    if (defenderMonster?.onAttack === 'hedoro_poison') {
+      log.push('🟤 ヘドロ男の毒攻撃！');
+    }
+  };
+
+  const doDefenderAttack = () => {
+    if (saboriterSkip) return;
+    mDmg = Math.max(0, mAtk); // モンスターは属性補正なし（シンプル化）
+    const hpResult = applyDamage({ baseHp: aBaseHp, addHp: aAddHp }, mDmg);
+    aBaseHp = hpResult.baseHp;
+    aAddHp  = hpResult.addHp;
+    log.push(`${defenderMonster?.name || '守り手'} の攻撃！ ${mDmg} ダメージ → 残りHP ${aBaseHp + aAddHp}`);
+  };
+
+  // カエンタケ先制毒
+  if (defenderMonster?.onFirstStrike === 'kaentake_poison' && first === 'defender') {
+    log.push('🍄 カエンタケの先制毒攻撃！');
+  }
+
+  if (first === 'attacker') {
+    doAttackerAttack();
+    if (mHp > 0) doDefenderAttack();
+  } else {
+    doDefenderAttack();
+    if (aBaseHp + aAddHp > 0) doAttackerAttack();
+  }
+
+  // 結果判定
+  let result;
+  if (mHp <= 0 && aBaseHp <= 0) {
+    result = 'draw_both_dead'; // 相打ち（へ〇ま竜特殊ケース）
+  } else if (mHp <= 0) {
+    result = 'attacker_win';
+  } else if (aBaseHp <= 0) {
+    result = 'defender_win';
+  } else {
+    result = 'draw'; // 1ターン終了
+  }
+
+  log.push(`結果: ${
+    result === 'attacker_win' ? '攻撃側の勝利！' :
+    result === 'defender_win' ? '防御側の勝利（敗北）…' :
+    result === 'draw_both_dead' ? '相打ち！' : '引き分け'
+  }`);
+
+  return {
+    result,
+    log,
+    attackerHpAfter: { baseHp: aBaseHp, addHp: aAddHp },
+    defenderHpAfter: mHp,
+    aDmg, mDmg,
+    channelerCloned,
+    saboriterSkip,
+    poisonApplied: defenderMonster?.onAttack === 'hedoro_poison' ||
+                   defenderMonster?.onFirstStrike === 'kaentake_poison',
+    maxHp: mMaxHp
+  };
+}
+
+// ===== 戦闘後処理 =====
+function processBattleAfterEffects(result, attacker, cell, defenderMonster, allPlayers, allCells) {
+  const effects = [];
+
+  if (result.result === 'attacker_win' || result.result === 'draw') {
+    // 火炎瓶男：与えたダメージの15%追加
+    if (defenderMonster?.onBattleEnd === 'kaenbin_extra') {
+      const extra = Math.floor(result.aDmg * 0.15);
+      effects.push({ type: 'extraDmg', target: 'attacker', value: extra, msg: `🔥 火炎瓶男の追加ダメージ！ −${extra}` });
+    }
+    // へ〇ま竜：敗者の最大基礎HP−20%
+    if (defenderMonster?.onBattleEnd === 'heroma_debuff') {
+      const debuff = Math.floor(attacker.baseMaxHp * 0.2);
+      effects.push({ type: 'maxHpDebuff', target: 'attacker', value: debuff, msg: `🦕 へ〇ま竜の呪い！ 最大基礎HP −${debuff}` });
+    }
+  }
+
+  if (result.result === 'attacker_win') {
+    // 火だるま：自己回復
+    if (defenderMonster?.onBattleEnd === 'hidauruma_heal') {
+      effects.push({ type: 'monsterHeal', value: 0.3, msg: '🔥 火だるまが基礎HPを30%回復！' });
+    }
+    // サラリーマンダー：所有者に80G
+    if (defenderMonster?.onBattleEnd === 'salary_gold') {
+      effects.push({ type: 'ownerGold', value: 80, msg: '💼 サラリーマンダーが80G稼いだ！' });
+    }
+    // タマカイ：所有者の手持ちG −5%
+    if (defenderMonster?.onBattleEnd === 'tamakai_penalty') {
+      effects.push({ type: 'ownerGoldPct', value: -0.05, msg: '🐟 タマカイのデメリット！ 所有者の手持ち −5%' });
+    }
+    // シーライオン：ランダム変動
+    if (defenderMonster?.onBattleEnd === 'sealion_random') {
+      const rand = Math.floor(Math.random() * 101) - 50;
+      effects.push({ type: 'ownerGold', value: rand, msg: `🦁 シーライオン！ 所有者の手持ち ${rand >= 0 ? '+' : ''}${rand}G` });
+    }
+    // いやし系：全モンスター15%回復
+    if (defenderMonster?.onBattleEnd === 'iyashi_heal') {
+      effects.push({ type: 'allMonsterHeal', value: 0.15, msg: '🌸 いやし系の癒し！ 全モンスター基礎HP+15%' });
+    }
+    // 港区女子：カード奪取
+    if (defenderMonster?.onAttack === 'minato_steal') {
+      effects.push({ type: 'stealCard', target: 'attacker', msg: '👩 港区女子がカードを奪った！' });
+    }
+  }
+
+  // プ〇ウスミサイル自傷
+  if (attacker._usedWeapon?.id === 'missile') {
+    const selfDmg = Math.floor(attacker.baseMaxHp * 0.3);
+    effects.push({ type: 'selfDmg', value: selfDmg, msg: `🚀 プ〇ウスミサイルの自傷 −${selfDmg}` });
+  }
+  // しっこくのつるぎ
+  if (attacker._usedWeapon?.id === 'shikkoku') {
+    effects.push({ type: 'forceHp1', msg: '⚫ しっこくのつるぎ… HPが1になった' });
+  }
+  // アマ〇ンの段ボール（生存時）
+  if (attacker._usedArmor?.id === 'cardboard' && result.attackerHpAfter.baseHp > 0) {
+    effects.push({ type: 'randomCard', msg: '📦 アマ〇ンの段ボール！ ランダムカードを入手' });
+  }
+
+  return effects;
+}
+
+
+
+// ===== 状態管理 =====
+let myUid = null;
+let myName = '';
+let myCharId = 'chinu';
+let currentRoomCode = null;
+let isAdmin = false;
+let roomState = null;
+let unsubRoom = null;
+let adminConfig = { maxPlayers: 4, goalAssets: 10000, mapId: 'standard' };
+let sellCallback = null;
+let sellSelected = new Set();
+
+// ===== 認証 =====
+onAuthReady(user => {
+  if (user) {
+    myUid = user.uid;
+    console.log('ログイン完了:', myUid);
+  }
+});
+
+// Firebaseに非同期でログイン（バックグラウンドで）
+loginAnonymously().catch(console.error);
+
+// ===== キャラ選択UI =====
+function buildCharGrid() {
+  const grid = document.getElementById('charGrid');
+  grid.innerHTML = '';
+  CHARS.forEach(c => {
+    const btn = document.createElement('div');
+    btn.className = 'char-btn';
+    btn.id = 'cb-' + c.id;
+    btn.innerHTML = `<span class="char-icon">${c.icon}</span><div class="char-name">${c.name}</div>`;
+    btn.onclick = () => selectChar(c.id);
+    grid.appendChild(btn);
+  });
+  selectChar('chinu');
+}
+
+function selectChar(id) {
+  myCharId = id;
+  const c = getChar(id);
+  document.querySelectorAll('.char-btn').forEach(b => {
+    b.className = 'char-btn';
+  });
+  const btn = document.getElementById('cb-' + id);
+  if (btn) btn.className = `char-btn selected-${c.attr}`;
+  document.getElementById('charDetail').innerHTML =
+    `<span style="color:${ATTR[c.attr].label.includes('🔥')?'var(--fire)':c.attr==='water'?'var(--water)':'var(--grass)'}">${ATTR[c.attr].label}</span>　ATK${c.baseAtk} HP${c.baseHp}<br>${c.desc}`;
+}
+
+buildCharGrid();
+
+// ===== 参加処理 =====
+window.handleEnter = async function() {
+  const name = document.getElementById('nameInput').value.trim();
+  const code = document.getElementById('roomCodeInput').value.trim();
+  const err = document.getElementById('enterError');
+
+  if (!name) { err.textContent = '名前を入力してください'; return; }
+  if (!myUid) { err.textContent = '接続中です…少し待ってください'; return; }
+
+  myName = name;
+
+  if (!code) {
+    // 管理者として新規ルーム作成
+    isAdmin = true;
+    currentRoomCode = generateRoomCode();
+    const config = { maxPlayers: 4, goalAssets: 10000, mapId: 'standard', adminUid: myUid };
+    await createRoom(currentRoomCode, config);
+    const pd = createPlayerData(myUid, myName, myCharId, true);
+    pd.ready = true;
+    await joinRoom(currentRoomCode, myUid, pd);
+    showAdminScreen();
+  } else {
+    // 既存ルームに参加
+    if (!(await roomExists(code))) {
+      err.textContent = 'ルームが見つかりません';
+      return;
+    }
+    const room = await getRoom(code);
+    if (room.status !== 'waiting') {
+      err.textContent = 'このルームはすでに開始しています';
+      return;
+    }
+    const playerCount = Object.keys(room.players || {}).length;
+    if (playerCount >= room.config.maxPlayers) {
+      err.textContent = 'このルームは満員です';
+      return;
+    }
+    currentRoomCode = code;
+    isAdmin = false;
+    const pd = createPlayerData(myUid, myName, myCharId, false);
+    pd.ready = true;
+    await joinRoom(currentRoomCode, myUid, pd);
+    showWaitScreen();
+  }
+};
+
+// ===== 管理者画面 =====
+function showAdminScreen() {
+  showScreen('adminScreen');
+  document.getElementById('displayRoomCode').textContent = currentRoomCode;
+  watchPlayers(currentRoomCode, updateAdminPlayerList);
+  watchRoom(currentRoomCode, state => {
+    roomState = state;
+    const adminActive = document.getElementById('adminScreen').classList.contains('active');
+    if (state.status === 'playing' && adminActive) enterGame();
+  });
+}
+
+function updateAdminPlayerList(players) {
+  const list = document.getElementById('adminPlayerList');
+  const max = adminConfig.maxPlayers;
+  list.innerHTML = '';
+  const entries = Object.values(players || {});
+  document.getElementById('playerCount').textContent = entries.length;
+
+  entries.forEach(p => {
+    const c = getChar(p.charId);
+    const div = document.createElement('div');
+    div.className = 'player-entry ready';
+    div.innerHTML = `
+      <div class="player-entry-icon">${p.icon}</div>
+      <div class="player-entry-info">
+        <div class="player-entry-name">${p.name}${p.isAI ? ' 🤖' : ''}</div>
+        <div class="player-entry-char">${c?.name || ''} ${ATTR[p.attr]?.label || ''}</div>
+      </div>
+      <div class="player-entry-status" style="color:var(--grass)">✔ 準備完了</div>
+    `;
+    list.appendChild(div);
+  });
+
+  for (let i = entries.length; i < max; i++) {
+    const div = document.createElement('div');
+    div.className = 'empty-slot';
+    div.textContent = `待機中…（${i + 1}人目）`;
+    list.appendChild(div);
+  }
+
+  const canStart = entries.length >= 2;
+  document.getElementById('startGameBtn').disabled = !canStart;
+  document.getElementById('addAiBtn').disabled = entries.length >= max;
+}
+
+window.setPlayers = function(n) {
+  adminConfig.maxPlayers = n;
+  [2,3,4].forEach(i => {
+    const btn = document.getElementById(`p${i}btn`);
+    if (btn) btn.className = 'mini-btn' + (i === n ? ' active' : '');
+  });
+  document.getElementById('maxPlayers').textContent = n;
+  updateGameState(currentRoomCode, { 'config/maxPlayers': n });
+};
+
+window.setGoal = function(g) {
+  adminConfig.goalAssets = g;
+  [5000,10000,20000].forEach(v => {
+    const btn = document.getElementById(`g${v/1000}btn`);
+    if (btn) btn.className = 'mini-btn' + (v === g ? ' active' : '');
+  });
+  updateGameState(currentRoomCode, { 'config/goalAssets': g });
+};
+
+window.addAI = async function() {
+  const room = await getRoom(currentRoomCode);
+  const count = Object.keys(room.players || {}).length;
+  if (count >= adminConfig.maxPlayers) return;
+  const aiChars = CHARS.filter(c => !Object.values(room.players || {}).some(p => p.charId === c.id));
+  if (!aiChars.length) return;
+  const aiChar = aiChars[Math.floor(Math.random() * aiChars.length)];
+  const aiData = createAIPlayer(aiChar.id);
+  await joinRoom(currentRoomCode, aiData.uid, aiData);
+};
+
+window.adminStartGame = async function() {
+  const room = await getRoom(currentRoomCode);
+  const players = Object.values(room.players || {});
+  if (players.length < 2) return;
+  const firstPlayer = players[0];
+  await fbStartGame(currentRoomCode, firstPlayer.uid);
+};
+
+// ===== 待機画面 =====
+function showWaitScreen() {
+  showScreen('waitScreen');
+  document.getElementById('waitRoomCode').textContent = currentRoomCode;
+  watchPlayers(currentRoomCode, updateWaitPlayerList);
+  watchRoom(currentRoomCode, state => {
+    roomState = state;
+    if (state.status === 'playing' && document.getElementById('waitScreen').classList.contains('active')) enterGame();
+  });
+}
+
+function updateWaitPlayerList(players) {
+  const list = document.getElementById('waitPlayerList');
+  list.innerHTML = '';
+  Object.values(players || {}).forEach(p => {
+    const c = getChar(p.charId);
+    const div = document.createElement('div');
+    div.className = 'player-entry' + (p.ready ? ' ready' : '');
+    div.innerHTML = `
+      <div class="player-entry-icon">${p.icon}</div>
+      <div class="player-entry-info">
+        <div class="player-entry-name">${p.name}</div>
+        <div class="player-entry-char">${c?.name || ''}</div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ===== ゲーム開始 =====
+function enterGame() {
+  showScreen('gameScreen');
+  initBoard();
+  watchRoom(currentRoomCode, onRoomUpdate);
+}
+
+// ===== ボードキャンバス =====
+const canvas = document.getElementById('boardCanvas');
+const ctx = canvas.getContext('2d');
+const N = 18;
+
+function resizeCanvas() {
+  const w = Math.min(window.innerWidth, 480);
+  canvas.width = w;
+  canvas.height = w;
+}
+
+function buildPositions(size) {
+  const PAD = size * 0.12, pos = [];
+  for (let i = 0; i < 5; i++) pos.push({ x: PAD + i * (size - PAD * 2) / 4, y: PAD });
+  for (let i = 1; i <= 4; i++) pos.push({ x: size - PAD, y: PAD + i * (size - PAD * 2) / 5 });
+  for (let i = 4; i >= 0; i--) pos.push({ x: PAD + i * (size - PAD * 2) / 4, y: size - PAD });
+  for (let i = 4; i >= 1; i--) pos.push({ x: PAD, y: PAD + i * (size - PAD * 2) / 5 });
+  return pos;
+}
+
+let positions = [];
+
+function initBoard() {
+  resizeCanvas();
+  positions = buildPositions(canvas.width);
+  window.addEventListener('resize', () => { resizeCanvas(); positions = buildPositions(canvas.width); drawBoard(); });
+  canvas.addEventListener('click', onCanvasClick);
+}
+
+function getCellStyle(type) {
+  return {
+    goal:  { bg: '#2a1e00', bd: '#ffd700' },
+    empty: { bg: '#0e1e0e', bd: '#3fb950' },
+    land:  { bg: '#0e1624', bd: '#58a6ff' },
+    shop:  { bg: '#1a0f2e', bd: '#9f7ae8' },
+    cp:    { bg: '#1e1e00', bd: '#f7c948' },
+  }[type] || { bg: '#0e1e0e', bd: '#555' };
+}
+
+function drawBoard() {
+  if (!roomState) return;
+  const cells = roomState.cells || {};
+  const players = roomState.players || {};
+  const size = canvas.width;
+  const r = size * 0.055;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#080c10';
+  ctx.fillRect(0, 0, size, size);
+
+  // ドット背景
+  for (let x = 0; x < size; x += 30) for (let y = 0; y < size; y += 30) {
+    ctx.fillStyle = '#141c24'; ctx.fillRect(x, y, 1, 1);
+  }
+
+  // 接続線
+  for (let i = 0; i < N; i++) {
+    const next = (i + 1) % N;
+    const a = positions[i], b = positions[next];
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    ctx.strokeStyle = '#1e2a38'; ctx.lineWidth = 4; ctx.stroke();
+  }
+
+  // マス描画
+  Object.values(cells).forEach(cell => {
+    const pos = positions[cell.id];
+    if (!pos) return;
+    const st = getCellStyle(cell.type);
+
+    if (cell.owner) { ctx.shadowColor = ATTR[cell.attr]?.color || '#888'; ctx.shadowBlur = 8; }
+    ctx.fillStyle = st.bg;
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = cell.owner ? (Object.values(players).find(p => p.uid === cell.owner)?.color || st.bd) : st.bd;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 属性リング
+    if (cell.attr !== 'none' && cell.type === 'land') {
+      ctx.strokeStyle = ATTR[cell.attr]?.color || '#888'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    ctx.textAlign = 'center';
+    const fs = Math.max(10, r * 0.7);
+    if (cell.type === 'cp') {
+      ctx.font = `bold ${fs * .85}px "Noto Sans JP"`;
+      ctx.fillStyle = '#f7c948'; ctx.fillText('CP', pos.x, pos.y + fs * .3);
+      ctx.font = `${fs * .55}px monospace`;
+      ctx.fillStyle = '#f7c948aa'; ctx.fillText('+100G', pos.x, pos.y - r - 4);
+    } else if (cell.type === 'goal') {
+      ctx.font = `${fs * 1.2}px serif`; ctx.fillText('⭐', pos.x, pos.y + fs * .4);
+    } else if (cell.type === 'shop') {
+      ctx.font = `${fs * 1.1}px serif`; ctx.fillText('🃏', pos.x, pos.y + fs * .4);
+    } else if (cell.type === 'land') {
+      const icon = cell.monster?.icon || (cell.attr === 'fire' ? '🔥' : cell.attr === 'water' ? '💧' : '🌿');
+      ctx.font = `${fs}px serif`; ctx.fillText(icon, pos.x, pos.y + fs * .35);
+      // 通行料
+      const toll = calcToll(cell, cell.monster);
+      ctx.font = `${fs * .55}px monospace`; ctx.fillStyle = '#ffaa44';
+      ctx.fillText(`${toll}G`, pos.x, pos.y - r - 4);
+    } else {
+      ctx.font = `${fs * .7}px "Noto Sans JP"`; ctx.fillStyle = '#3a5a3a';
+      ctx.fillText(cell.id, pos.x, pos.y + fs * .28);
+    }
+  });
+
+  // コマ描画
+  const playerArr = Object.values(players);
+  playerArr.forEach((p, idx) => {
+    const pos = positions[p.pos] || positions[0];
+    const angle = (idx / Math.max(playerArr.length, 2)) * Math.PI * 2 - Math.PI / 2;
+    const d = r * 0.8;
+    const x = pos.x + Math.cos(angle) * d;
+    const y = pos.y + Math.sin(angle) * d;
+    const pr = r * 0.58;
+
+    ctx.shadowColor = p.color || '#888'; ctx.shadowBlur = 16;
+    ctx.fillStyle = (p.color || '#888') + '44';
+    ctx.beginPath(); ctx.arc(x, y, pr, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = p.color || '#888'; ctx.lineWidth = p.uid === roomState?.turn?.uid ? 3 : 1.8;
+    ctx.beginPath(); ctx.arc(x, y, pr, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.font = `${Math.max(10, pr)}px serif`; ctx.textAlign = 'center';
+    ctx.fillText(p.icon, x, y + pr * .38);
+
+    // 名前
+    ctx.font = `bold ${Math.max(8, pr * .5)}px "Noto Sans JP"`;
+    ctx.fillStyle = p.color || '#888';
+    ctx.fillText(p.uid === myUid ? '自分' : (p.isAI ? 'AI' : p.name), x, y - pr - 4);
+
+    // HP tiny bar
+    const bw = pr * 2, bx = x - bw / 2, by = y + pr + 3;
+    const hpPct = (p.baseHp + p.addHp) / (p.baseMaxHp + (p.addHpMax || 0));
+    ctx.fillStyle = '#111'; ctx.fillRect(bx, by, bw, 3);
+    ctx.fillStyle = hpPct > .5 ? '#22cc44' : hpPct > .25 ? '#ddcc00' : '#cc2200';
+    ctx.fillRect(bx, by, bw * Math.max(0, hpPct), 3);
+  });
+}
+
+// ===== リアルタイム更新 =====
+function onRoomUpdate(state) {
+  roomState = state;
+  drawBoard();
+  updateStatusBar();
+
+  // 勝利判定
+  const goal = state.config?.goalAssets || 10000;
+  const players = Object.values(state.players || {});
+  const winner = players.find(p => totalAssets(p, state.cells || {}) >= goal);
+  if (winner || state.status === 'finished') {
+    showFinalResult(players, state.cells || {});
+    return;
+  }
+
+  // 自分のターン
+  if (state.turn?.uid === myUid) {
+    showMyTurnUI();
+  } else {
+    setMsg(`${getPlayerName(state.turn?.uid)} のターン…`);
+    setCmds([]);
+  }
+}
+
+function getPlayerName(uid) {
+  if (!roomState) return '???';
+  const p = roomState.players?.[uid];
+  return p ? `${p.icon} ${p.isAI ? 'AI' : p.name}` : '???';
+}
+
+// ===== ステータスバー =====
+function updateStatusBar() {
+  if (!roomState) return;
+  const bar = document.getElementById('statusBar');
+  const players = Object.values(roomState.players || {});
+  const cells = roomState.cells || {};
+  const ranks = getRanks(players, cells);
+  const rankEmoji = ['🥇', '🥈', '🥉', '4位'];
+  const inner = document.createElement('div');
+  inner.className = 'sbar-inner';
+
+  players.forEach(p => {
+    const ta = totalAssets(p, cells);
+    const rank = ranks[p.uid];
+    const isMyTurn = p.uid === roomState.turn?.uid;
+    const isMe = p.uid === myUid;
+    const card = document.createElement('div');
+    card.className = `pcard${isMyTurn ? ' my-turn' : ''}${isMe ? ' me' : ''}`;
+    card.style.borderColor = isMyTurn ? p.color : isMe ? 'var(--water)' : 'var(--border)';
+    card.innerHTML = `
+      <div class="pcard-top">
+        <span class="pcard-icon">${p.icon}</span>
+        <span class="pcard-name" style="color:${p.color}">${isMe ? '自分' : (p.isAI ? 'AI' : p.name)}</span>
+        <span class="pcard-rank">${rankEmoji[rank - 1] || rank + '位'}</span>
+      </div>
+      <div class="pcard-row">総資産 <span>${ta}G</span></div>
+      <div class="pcard-row">手持 <span>${p.gold}G</span> HP <span style="color:${p.baseHp/p.baseMaxHp>.5?'var(--hg)':p.baseHp/p.baseMaxHp>.25?'var(--hy)':'var(--hr)'}">${p.baseHp}+${p.addHp}</span></div>
+      <div class="pcard-row">ATK <span>${p.baseAtk}</span> LAP <span>${p.lapCount || 0}</span></div>
+    `;
+    card.onclick = () => showPlayerDetail(p, cells);
+    inner.appendChild(card);
+  });
+
+  const ti = document.createElement('div');
+  ti.className = 'turn-info';
+  ti.innerHTML = `<b>${roomState.turn?.count || 1}</b>ターン`;
+  inner.appendChild(ti);
+
+  bar.innerHTML = '';
+  bar.appendChild(inner);
+}
+
+function getRanks(players, cells) {
+  const sorted = [...players].sort((a, b) => totalAssets(b, cells) - totalAssets(a, cells));
+  const ranks = {};
+  sorted.forEach((p, i) => ranks[p.uid] = i + 1);
+  return ranks;
+}
+
+// ===== 自分のターンUI =====
+function showMyTurnUI() {
+  const p = roomState?.players?.[myUid];
+  if (!p) return;
+  setMsg(`${p.icon} あなたのターン！`);
+  const cmds = [];
+  if (p.spells?.length > 0) {
+    cmds.push({ label: '🎴 スペルを使う', cls: 'purple', fn: showSpellSelect });
+  }
+  cmds.push({ label: '🎲 ダイスを振る', cls: 'green', fn: rollDice });
+  setCmds(cmds);
+}
+
+// ===== ダイス =====
+let diceRollInProgress = false;
+
+async function rollDice() {
+  if (diceRollInProgress) return;
+  diceRollInProgress = true;
+  setCmds([]);
+
+  const p = roomState?.players?.[myUid];
+  if (!p) return;
+
+  const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+  let f = 0;
+  const id = setInterval(() => {
+    document.getElementById('diceDisp').textContent = faces[Math.floor(Math.random() * 6)];
+    if (++f > 12) clearInterval(id);
+  }, 70);
+  await wait(950);
+
+  let roll;
+  // イカサマ
+  if (p.effects?.fixDice !== null && p.effects?.fixDice !== undefined) {
+    roll = p.effects.fixDice;
+    await updatePlayer(currentRoomCode, myUid, { 'effects/fixDice': null });
+  }
+  // 牛歩
+  else if (p.effects?.slowDice > 0) {
+    roll = Math.floor(Math.random() * 2) + 1;
+    const newSlow = p.effects.slowDice - 1;
+    await updatePlayer(currentRoomCode, myUid, { 'effects/slowDice': newSlow });
+  }
+  else {
+    roll = Math.floor(Math.random() * 6) + 1;
+  }
+
+  document.getElementById('diceDisp').textContent = faces[roll - 1];
+
+  // ヘイスト
+  let subRoll = 0;
+  if (p.effects?.haste > 0) {
+    subRoll = Math.floor(Math.random() * 3) + 1;
+    document.getElementById('subDiceDisp').style.display = 'block';
+    document.getElementById('subDiceDisp').textContent = `+${subRoll}`;
+    const newHaste = p.effects.haste - 1;
+    await updatePlayer(currentRoomCode, myUid, { 'effects/haste': newHaste });
+  }
+
+  // うさぎ：3回に1回ヘイスト
+  if (p.charId === 'usagi') {
+    const drc = (p.diceRollCount || 0) + 1;
+    if (drc % 3 === 0) {
+      subRoll += Math.floor(Math.random() * 3) + 1;
+      setMsg(`⚡ うさぎのヘイスト！ +${subRoll}マス！`);
+    }
+    await updatePlayer(currentRoomCode, myUid, { diceRollCount: drc });
+  }
+
+  const total = roll + subRoll;
+  setMsg(`${p.icon} ダイス <span style="color:var(--text-gold);font-size:16px">${roll}</span>${subRoll > 0 ? ` + ${subRoll} = ${total}` : ''}`);
+  await wait(500);
+  await movePlayer(p, total);
+  diceRollInProgress = false;
+}
+
+// ===== 移動 =====
+async function movePlayer(p, steps) {
+  let currentPos = p.pos;
+  const passedCells = [];
+
+  for (let s = 0; s < steps; s++) {
+    currentPos = (currentPos + 1) % N;
+
+    // ゴール通過（途中）
+    if (currentPos === 0 && s < steps - 1) {
+      await handleGoalPass(p, false);
+    }
+    // CP通過
+    const cell = roomState?.cells?.[currentPos];
+    if (cell?.type === 'cp' && !p.cpDone) {
+      await updatePlayer(currentRoomCode, myUid, {
+        pos: currentPos, cpDone: true, gold: p.gold + 100
+      });
+      p = roomState?.players?.[myUid] || p;
+      setMsg(`⚑ <span style="color:var(--cp)">CP通過！ +100G</span>`);
+      await fbAddLog(currentRoomCode, `${p.name} CP通過 +100G`);
+      await wait(600);
+    } else {
+      await updatePlayer(currentRoomCode, myUid, { pos: currentPos });
+    }
+
+    // 自分の土地を通過した場合は記録
+    if (cell?.owner === myUid && cell?.type === 'land') {
+      passedCells.push(currentPos);
+    }
+
+    drawBoard();
+    await wait(250);
+  }
+
+  p = roomState?.players?.[myUid] || p;
+  // 通過した自分の土地へのコマンド
+  if (passedCells.length > 0) {
+    // 土地コマンド（通過）
+    // ゴールやCPにぴったり止まった場合は全土地対象（後で処理）
+  }
+
+  await landEvent(p, currentPos, passedCells);
+}
+
+// ===== ゴール通過 =====
+async function handleGoalPass(p, isExact) {
+  const cells = roomState?.cells || {};
+  let bonus = 0;
+  let lapBonusMult = 1;
+
+  if (p.cpDone) {
+    const lapCount = (p.lapCount || 0) + 1;
+    const lapBaseBonus = 500 + (lapCount - 1) * 100;
+    const landVal = Object.values(cells).filter(c => c.owner === myUid && c.type === 'land')
+      .reduce((s, c) => s + landAssetValue(c, cells, myUid), 0);
+    const landBonus = Math.floor(landVal * 0.1);
+    // 凱旋効果
+    if (p.effects?.lapBoost) lapBonusMult = p.effects.lapBoost.value;
+    bonus = Math.floor((lapBaseBonus + landBonus) * lapBonusMult);
+
+    // HP回復（30%）
+    const hpRecover = Math.floor(p.baseMaxHp * 0.3);
+    const newBaseHp = Math.min(p.baseMaxHp, p.baseHp + hpRecover);
+    // 周回成長
+    const char = getChar(p.charId);
+    const atkGain = char?.lapAtk || 3;
+    const hpGain = char?.lapHp || 5;
+
+    const updates = {
+      gold: (p.gold || 0) + bonus,
+      baseHp: newBaseHp,
+      baseMaxHp: p.baseMaxHp + hpGain,
+      baseAtk: p.baseAtk + atkGain,
+      lapCount: lapCount,
+      cpDone: false,
+      'effects/lapBoost': null,
+    };
+    await updatePlayer(currentRoomCode, myUid, updates);
+    setMsg(`⭐ <span style="color:var(--text-gold)">周回ボーナス +${bonus}G！ ATK+${atkGain} HP+${hpGain}</span>`);
+    await fbAddLog(currentRoomCode, `${p.name} 周回 +${bonus}G ATK+${atkGain}`);
+    await wait(1000);
+
+    // 毒解除
+    if (p.effects?.poisoned) {
+      await updatePlayer(currentRoomCode, myUid, { 'effects/poisoned': false });
+    }
+  } else {
+    await updatePlayer(currentRoomCode, myUid, { cpDone: false });
+    setMsg('⭐ ゴール通過（CP未達成 — 周回ボーナスなし）');
+    await wait(800);
+  }
+
+  // ぴったり止まった場合は全土地コマンド
+  if (isExact) {
+    await showAllLandCommands(p);
+  }
+}
+
+// ===== マスイベント =====
+async function landEvent(p, cellId, passedCells) {
+  const cells = roomState?.cells || {};
+  const cell = cells[cellId];
+  if (!cell) { await endTurn(); return; }
+
+  // 毒ダメージ（ターン開始時）
+  if (p.effects?.poisoned) {
+    const poisonDmg = Math.floor(p.baseMaxHp * 0.1);
+    const hp = applyDamage(p, poisonDmg);
+    await updatePlayer(currentRoomCode, myUid, { baseHp: hp.baseHp, addHp: hp.addHp });
+    setMsg(`☠ <span style="color:#dd44ff">毒のダメージ！ −${poisonDmg}</span>`);
+    await wait(700);
+    p = roomState?.players?.[myUid] || p;
+    if (p.baseHp <= 0) { await handleDeath(p, null, null); return; }
+  }
+
+  if (cell.type === 'goal') {
+    await handleGoalPass(p, true);
+    await endTurn();
+    return;
+  }
+  if (cell.type === 'cp') {
+    // CPにぴったり止まった → 全土地コマンド
+    await showAllLandCommands(p);
+    await endTurn();
+    return;
+  }
+  if (cell.type === 'shop') {
+    await shopEvent(p);
+    return;
+  }
+  if (cell.type === 'empty') {
+    setMsg(`空き地 <b>マス${cellId}</b> — 購入: <span style="color:var(--text-gold)">100G</span>`);
+    if (p.gold >= 100) {
+      setCmds([
+        { label: '🏠 購入 100G', cls: 'green', fn: () => buyLand(p, cell) },
+        { label: 'スルー', fn: endTurn }
+      ]);
+    } else {
+      setMsg(`空き地 <b>マス${cellId}</b> — 資金不足（100G必要）`);
+      setCmds([{ label: 'スルー', fn: endTurn }]);
+    }
+    return;
+  }
+  if (cell.type === 'land') {
+    if (cell.owner === myUid) {
+      setMsg(`自分の土地 マス${cellId} Lv${cell.level}`);
+      // 通過した土地のコマンド
+      await showLandCommands(p, cell, passedCells.includes(cellId));
+      return;
+    }
+    if (cell.owner) {
+      const owner = roomState?.players?.[cell.owner];
+      if (!owner) { await endTurn(); return; }
+      const monster = cell.monster;
+      const baseToll = calcToll(cell, monster);
+
+      if (p.baseHp + p.addHp <= 0) {
+        // HP0 → 強制2倍通行料
+        const toll = baseToll * 2;
+        setMsg(`HP0のため戦闘不可！<br>強制通行料 <span style="color:var(--fire)">${toll}G（2倍）</span>`);
+        await payToll(p, cell, owner, toll);
+        return;
+      }
+
+      setMsg(`<span style="color:${owner.color}">${owner.name}</span> の土地 Lv${cell.level}！<br>通行料: <span style="color:var(--text-gold)">${baseToll}G</span>`);
+      setCmds([
+        { label: '⚔ 侵略する', cls: 'red', fn: () => startBattleFlow(p, cell, owner, monster) },
+        { label: `💰 半額 ${Math.floor(baseToll / 2)}G`, cls: 'blue', fn: () => payToll(p, cell, owner, Math.floor(baseToll / 2)) },
+      ]);
+      return;
+    }
+  }
+  await endTurn();
+}
+
+// ===== 土地購入 =====
+async function buyLand(p, cell) {
+  const cost = 100;
+  await updatePlayer(currentRoomCode, myUid, {
+    gold: p.gold - cost,
+    landAssets: (p.landAssets || 0) + cost
+  });
+  await updateCell(currentRoomCode, cell.id, {
+    type: 'land',
+    owner: myUid,
+    investedCost: cost
+  });
+  await fbAddLog(currentRoomCode, `${p.name} マス${cell.id}を購入`);
+  setMsg(`🏠 マス${cell.id}を購入！ モンスターを配置しよう`);
+  await wait(700);
+  // 購入後すぐにモンスター配置オプション
+  p = roomState?.players?.[myUid] || p;
+  const updatedCell = roomState?.cells?.[cell.id] || cell;
+  await showLandCommands(p, updatedCell, true);
+}
+
+// ===== 土地コマンド =====
+async function showLandCommands(p, cell, canCommand) {
+  if (!canCommand) { await endTurn(); return; }
+  const toll = calcToll(cell);
+  const upgCost = cell.level < 5 ? cell.level * 100 : null;
+  setMsg(`マス${cell.id} Lv${cell.level} — 通行料: ${toll}G`);
+  const cmds = [
+    { label: '🐉 モンスター配置', cls: 'purple', fn: () => showMonsterSelect(p, cell) }
+  ];
+  if (upgCost) cmds.push({ label: `⬆ Lv${cell.level + 1}に強化 ${upgCost}G`, cls: 'gold', disabled: p.gold < upgCost, fn: () => levelUp(p, cell) });
+  cmds.push({ label: 'スルー', fn: endTurn });
+  setCmds(cmds);
+}
+
+async function showAllLandCommands(p) {
+  const cells = roomState?.cells || {};
+  const myLands = Object.values(cells).filter(c => c.owner === myUid && c.type === 'land');
+  if (myLands.length === 0) return;
+
+  return new Promise(resolve => {
+    showOverlay('土地コマンド（全土地）', '保有するすべての土地に操作できます',
+      myLands.map(c => ({
+        label: `マス${c.id} Lv${c.level} ${c.monster?.icon || '（モンスターなし）'}`,
+        fn: async () => {
+          hideOverlay();
+          await showLandCommands(p, c, true);
+          resolve();
+        }
+      })).concat([{ label: 'スキップ', fn: () => { hideOverlay(); resolve(); } }])
+    );
+  });
+}
+
+// ===== レベルアップ =====
+async function levelUp(p, cell) {
+  const cost = cell.level * 100;
+  if (p.gold < cost) return;
+  const newLevel = cell.level + 1;
+  const newMonster = cell.monster ? {
+    ...cell.monster,
+    baseHp: cell.monster.baseHp + 10,
+    maxHp: cell.monster.maxHp + 10,
+    currentHp: Math.min(cell.monster.currentHp + 10, cell.monster.maxHp + 10)
+  } : null;
+  await updatePlayer(currentRoomCode, myUid, { gold: p.gold - cost });
+  await updateCell(currentRoomCode, cell.id, {
+    level: newLevel,
+    investedCost: (cell.investedCost || 100) + cost,
+    monster: newMonster
+  });
+  await fbAddLog(currentRoomCode, `${p.name} マス${cell.id} Lv${newLevel}にアップ`);
+  setMsg(`⬆ マス${cell.id} を Lv${newLevel} に！ 通行料: ${Math.floor(50 * Math.pow(1.5, newLevel - 1))}G`);
+  await wait(800);
+  await endTurn();
+}
+
+// ===== モンスター選択 =====
+function showMonsterSelect(p, cell) {
+  const myMonsters = p.monsters || [];
+  if (myMonsters.length === 0) {
+    setMsg('手持ちモンスターがいません');
+    setCmds([{ label: 'スルー', fn: endTurn }]);
+    return;
+  }
+  showOverlay('🐉 モンスター配置',
+    `マス${cell.id} Lv${cell.level}に配置します<br>属性がこの土地の属性になります`,
+    myMonsters.map((m, idx) => ({
+      label: `${m.icon || '👾'} ${m.name} ${ATTR[m.attr]?.label || ''} ATK:${m.atk} HP:${m.currentHp || m.baseHp}`,
+      cls: m.attr === 'fire' ? 'red' : m.attr === 'water' ? 'blue' : 'green',
+      fn: async () => {
+        hideOverlay();
+        await placeMonster(p, cell, m, idx);
+      }
+    })).concat([{ label: 'キャンセル', fn: () => { hideOverlay(); endTurn(); } }])
+  );
+}
+
+async function placeMonster(p, cell, monster, monsterIdx) {
+  const cost = cell.level * 50;
+  if (p.gold < cost) {
+    setMsg(`資金不足！ 配置コスト: ${cost}G`);
+    await wait(800);
+    await endTurn();
+    return;
+  }
+
+  // モンスターのHPをレベルに合わせて調整
+  const adjustedMonster = {
+    ...monster,
+    baseHp: monster.baseHp + (cell.level - 1) * 10,
+    maxHp: monster.maxHp + (cell.level - 1) * 10,
+    currentHp: monster.currentHp + (cell.level - 1) * 10
+  };
+
+  const newMonsters = [...(p.monsters || [])];
+  newMonsters.splice(monsterIdx, 1);
+
+  await updatePlayer(currentRoomCode, myUid, {
+    gold: p.gold - cost,
+    landAssets: Math.max(0, (p.landAssets || 0) - cost),
+    monsters: newMonsters
+  });
+  await updateCell(currentRoomCode, cell.id, {
+    attr: monster.attr,
+    monster: adjustedMonster
+  });
+
+  await fbAddLog(currentRoomCode, `${p.name} マス${cell.id}に${monster.name}を配置`);
+  setMsg(`🐉 ${monster.name}を配置！ 属性: ${ATTR[monster.attr]?.label || ''}`);
+  await wait(800);
+  await endTurn();
+}
+
+// ===== 通行料支払い =====
+async function payToll(p, cell, owner, amount) {
+  const newGold = Math.max(0, (p.gold || 0) - amount);
+  await updatePlayer(currentRoomCode, myUid, { gold: newGold });
+  await updatePlayer(currentRoomCode, owner.uid, { gold: (owner.gold || 0) + amount });
+  await fbAddLog(currentRoomCode, `${p.name}→${owner.name} 通行料${amount}G`);
+  setMsg(`💰 通行料 <span style="color:var(--text-gold)">${amount}G</span> 支払い`);
+  await wait(700);
+
+  // 手持ち0 → 強制売却
+  if (newGold <= 0) {
+    await checkBankruptcy();
+    return;
+  }
+  await endTurn();
+}
+
+// ===== 戦闘フロー =====
+async function startBattleFlow(attacker, cell, owner, monster) {
+  // 装備選択
+  const wp = attacker.weapons || [];
+  const ap = attacker.armors || [];
+  let selectedWeapon = null;
+  let selectedArmor = null;
+
+  selectedWeapon = await selectEquip('⚔ 武器を選択', wp, '手持ち武器:');
+  selectedArmor = await selectEquip('🛡 防具を選択', ap, '手持ち防具:', true);
+
+  // 戦闘画面へ
+  showBattleScreen(attacker, cell, owner, monster, selectedWeapon, selectedArmor);
+}
+
+function selectEquip(title, items, desc, isArmor = false) {
+  return new Promise(resolve => {
+    const noneLabel = isArmor ? '🧍 なし（無防備）' : '✊ なし（素手）';
+    const btns = [{ label: noneLabel, cls: 'gray', fn: () => { hideOverlay(); resolve(null); } }];
+    items.forEach(it => {
+      const canAfford = (roomState?.players?.[myUid]?.gold || 0) >= (it.cost || 0);
+      const statStr = isArmor ? `加算HP+${it.addHp || 0}` : `ATK+${it.atk || 0}`;
+      btns.push({
+        label: `${it.name} (${statStr}) コスト:${it.cost || 0}G`,
+        cls: canAfford ? (isArmor ? 'blue' : 'red') : 'gray',
+        disabled: !canAfford,
+        fn: () => { hideOverlay(); resolve(it); }
+      });
+    });
+    showOverlay(title, desc + `（コスト不足は使用不可）`, btns);
+  });
+}
+
+// ===== 戦闘画面 =====
+function showBattleScreen(attacker, cell, owner, monster, weapon, armor) {
+  showScreen('battleScreen');
+  document.getElementById('battleResult').style.display = 'none';
+  document.getElementById('battleCmd').style.display = 'flex';
+
+  const finalAtk = playerTotalAtk(attacker, weapon) + (armor?.isMissile ? 0 : 0);
+  const monAttr = cell.attr !== 'none' ? cell.attr : monster?.attr || 'none';
+  const adjBonus = hasAdjacentBonus(cell, roomState?.cells || {});
+
+  document.getElementById('battleHeader').textContent = `⚔ マス${cell.id} の戦闘`;
+  document.getElementById('spritePlayer').textContent = attacker.icon;
+  document.getElementById('spriteMonster').textContent = monster?.icon || '👾';
+  document.getElementById('b-pname').textContent = attacker.name;
+  document.getElementById('b-pbhp').textContent = attacker.baseHp;
+  document.getElementById('b-pahp').textContent = attacker.addHp + (armor?.addHp || 0) + (weapon?.addHp || 0);
+  document.getElementById('b-patk').textContent = finalAtk;
+  document.getElementById('b-mname').textContent = monster?.name || '番人';
+  document.getElementById('b-mhpnum').textContent = monster?.currentHp || '?';
+  document.getElementById('b-mhpmax').textContent = monster?.maxHp || '?';
+  document.getElementById('b-matk').textContent = (monster?.atk || owner?.baseAtk || 0) + (adjBonus ? '×1.5' : '');
+
+  updateBattleHpBar('b-php', attacker.baseHp + attacker.addHp, attacker.baseMaxHp);
+  updateBattleHpBar('b-mhp', monster?.currentHp || 0, monster?.maxHp || 1);
+
+  setBattleMsg(`<b style="color:var(--fire)">${monster?.name || '番人'}</b> が現れた！${adjBonus ? '<br><span style="color:var(--cp)">⚡ 隣接ボーナス！ モンスターATK×1.5</span>' : ''}`);
+  setBattleCmds([{ label: '▶ 戦闘開始', cls: 'red', fn: () => executeBattle(attacker, cell, owner, monster, weapon, armor) }]);
+}
+
+function updateBattleHpBar(id, hp, max) {
+  const bar = document.getElementById(id);
+  if (!bar) return;
+  const pct = Math.max(0, hp / max * 100);
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 50 ? 'var(--hg)' : pct > 25 ? 'var(--hy)' : 'var(--hr)';
+}
+
+async function executeBattle(attacker, cell, owner, monster, weapon, armor) {
+  setBattleCmds([]);
+
+  // コスト消費（武器・防具）
+  const p = roomState?.players?.[myUid] || attacker;
+  let goldAfterEquip = p.gold;
+  if (weapon?.cost) goldAfterEquip -= weapon.cost;
+  if (armor?.cost) goldAfterEquip -= armor.cost;
+  if (goldAfterEquip < 0) {
+    setBattleMsg('ゴールドが不足して装備を使えなかった…');
+    await wait(800);
+    // 素手・無防具で再計算
+    weapon = null; armor = null;
+  } else if (weapon?.cost || armor?.cost) {
+    await updatePlayer(currentRoomCode, myUid, { gold: goldAfterEquip });
+  }
+
+  const battleResult = simulateBattle(attacker, owner, {
+    attackerWeapon: weapon,
+    attackerArmor: armor,
+    defenderMonster: monster,
+    cell,
+    allCells: roomState?.cells || {}
+  });
+
+  // 戦闘アニメーション
+  for (const line of battleResult.log) {
+    setBattleMsg(line);
+    await wait(800);
+  }
+
+  // HP更新
+  const newAHp = battleResult.attackerHpAfter;
+  await updatePlayer(currentRoomCode, myUid, {
+    baseHp: newAHp.baseHp,
+    addHp: newAHp.addHp
+  });
+  updateBattleHpBar('b-php', newAHp.baseHp + newAHp.addHp, attacker.baseMaxHp);
+  document.getElementById('b-pbhp').textContent = newAHp.baseHp;
+  document.getElementById('b-pahp').textContent = newAHp.addHp;
+
+  await updateCell(currentRoomCode, cell.id, { 'monster/currentHp': battleResult.defenderHpAfter });
+  updateBattleHpBar('b-mhp', battleResult.defenderHpAfter, monster?.maxHp || 1);
+  document.getElementById('b-mhpnum').textContent = battleResult.defenderHpAfter;
+
+  // 戦闘後処理
+  const effects = processBattleAfterEffects(
+    battleResult, { ...attacker, _usedWeapon: weapon, _usedArmor: armor },
+    cell, monster, roomState?.players || {}, roomState?.cells || {}
+  );
+  for (const eff of effects) {
+    setBattleMsg(eff.msg);
+    await wait(600);
+    await applyBattleEffect(eff, attacker, cell, owner, monster);
+  }
+
+  // 毒付与
+  if (battleResult.poisonApplied) {
+    await updatePlayer(currentRoomCode, owner.uid, { 'effects/poisoned': true });
+    setBattleMsg('☠ 毒状態になった！');
+    await wait(600);
+  }
+
+  // 〇ちゃんねらー増殖
+  if (battleResult.channelerCloned) {
+    const cells = roomState?.cells || {};
+    const emptyCells = Object.values(cells).filter(c => c.type === 'empty');
+    if (emptyCells.length > 0) {
+      const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      await updateCell(currentRoomCode, target.id, {
+        type: 'land',
+        owner: cell.owner,
+        monster: { ...monster },
+        attr: monster?.attr || 'grass',
+        level: 1,
+        investedCost: 0
+      });
+      setBattleMsg('💻 〇ちゃんねらーが増殖した！');
+      await wait(600);
+    }
+  }
+
+  // 加算HP回復（戦闘終了）
+  const updatedP = roomState?.players?.[myUid] || attacker;
+  const landAddHp = getLandAddHp(updatedP);
+  await updatePlayer(currentRoomCode, myUid, { addHp: landAddHp });
+
+  // 結果表示
+  await showBattleResult(battleResult, attacker, cell, owner, monster, weapon, armor);
+}
+
+function getLandAddHp(p) {
+  // 土地レベルによる加算HP（保有土地の最大レベル×10）
+  const cells = roomState?.cells || {};
+  const myLands = Object.values(cells).filter(c => c.owner === p.uid && c.type === 'land');
+  if (myLands.length === 0) return 0;
+  return Math.max(...myLands.map(c => c.level)) * 10;
+}
+
+async function applyBattleEffect(eff, attacker, cell, owner, monster) {
+  const p = roomState?.players?.[myUid] || attacker;
+  if (eff.type === 'selfDmg') {
+    const hp = applyDamage(p, eff.value);
+    await updatePlayer(currentRoomCode, myUid, hp);
+  } else if (eff.type === 'forceHp1') {
+    await updatePlayer(currentRoomCode, myUid, { baseHp: 1, addHp: 0 });
+  } else if (eff.type === 'extraDmg') {
+    const hp = applyDamage(p, eff.value);
+    await updatePlayer(currentRoomCode, myUid, hp);
+  } else if (eff.type === 'maxHpDebuff') {
+    await updatePlayer(currentRoomCode, myUid, { baseMaxHp: Math.max(1, p.baseMaxHp - eff.value) });
+  } else if (eff.type === 'ownerGold') {
+    const o = roomState?.players?.[owner.uid] || owner;
+    await updatePlayer(currentRoomCode, owner.uid, { gold: (o.gold || 0) + eff.value });
+  } else if (eff.type === 'ownerGoldPct') {
+    const o = roomState?.players?.[owner.uid] || owner;
+    const change = Math.floor((o.gold || 0) * Math.abs(eff.value));
+    await updatePlayer(currentRoomCode, owner.uid, { gold: Math.max(0, (o.gold || 0) - change) });
+  } else if (eff.type === 'stealCard') {
+    // カード奪取処理（簡易）
+    const target = roomState?.players?.[myUid] || p;
+    const allCards = [
+      ...(target.weapons || []).map(c => ({ ...c, _type: 'weapon' })),
+      ...(target.armors || []).map(c => ({ ...c, _type: 'armor' })),
+      ...(target.spells || []).map(c => ({ ...c, _type: 'spell' })),
+      ...(target.monsters || []).map(c => ({ ...c, _type: 'monster' })),
+    ];
+    if (allCards.length > 0) {
+      const stolen = allCards[Math.floor(Math.random() * allCards.length)];
+      setBattleMsg(`${stolen.name}を奪われた！`);
+      // TODO: Firebase更新
+    }
+  } else if (eff.type === 'randomCard') {
+    // ランダムカード入手（段ボール効果）
+    // 簡易実装：スペルをランダムで付与
+    const spell = SPELLS[Math.floor(Math.random() * SPELLS.length)];
+    const p2 = roomState?.players?.[myUid] || p;
+    const spells = [...(p2.spells || [])];
+    if (spells.length < 3) {
+      spells.push(spell);
+      await updatePlayer(currentRoomCode, myUid, { spells });
+      setBattleMsg(`📦 ${spell.name}を入手！`);
+    } else {
+      await updatePlayer(currentRoomCode, myUid, { gold: (p2.gold || 0) + 100 });
+      setBattleMsg('📦 カードが満杯！ +100G');
+    }
+  } else if (eff.type === 'allMonsterHeal') {
+    // 全モンスターHP回復（いやし系）
+    const o = roomState?.players?.[owner.uid] || owner;
+    const healed = (o.monsters || []).map(m => ({
+      ...m,
+      currentHp: Math.min(m.maxHp, (m.currentHp || m.baseHp) + Math.floor(m.baseHp * eff.value))
+    }));
+    await updatePlayer(currentRoomCode, owner.uid, { monsters: healed });
+  } else if (eff.type === 'monsterHeal') {
+    // モンスター自己回復
+    const healAmt = Math.floor((monster?.maxHp || 0) * eff.value);
+    const newHp = Math.min(monster?.maxHp || 0, (monster?.currentHp || 0) + healAmt);
+    await updateCell(currentRoomCode, cell.id, { 'monster/currentHp': newHp });
+  }
+}
+
+async function showBattleResult(battleResult, attacker, cell, owner, monster, weapon, armor) {
+  const result = battleResult.result;
+  let banner = '', bannerCls = '', detail = '';
+
+  const p = roomState?.players?.[myUid] || attacker;
+
+  if (result === 'attacker_win') {
+    // 土地奪取
+    const oldVal = landAssetValue(cell, roomState?.cells || {}, owner.uid);
+    const newVal = landAssetValue({ ...cell, owner: myUid }, roomState?.cells || {}, myUid);
+    await updateCell(currentRoomCode, cell.id, { owner: myUid });
+    await updatePlayer(currentRoomCode, owner.uid, { landAssets: Math.max(0, (owner.landAssets || 0) - oldVal) });
+    await updatePlayer(currentRoomCode, myUid, { landAssets: (p.landAssets || 0) + newVal });
+    await fbAddLog(currentRoomCode, `${attacker.name} マス${cell.id}を奪取！`);
+    banner = '✦ 勝利！ ✦'; bannerCls = 'result-win';
+    detail = `${monster?.name || '番人'}を倒した！<br>マス${cell.id}を奪取！`;
+
+  } else if (result === 'draw_both_dead') {
+    // 相打ち（へ〇ま竜）
+    await updateCell(currentRoomCode, cell.id, {
+      owner: null, type: 'empty', monster: null, attr: 'none', level: 1, investedCost: 0
+    });
+    if (owner.uid !== myUid) {
+      await updatePlayer(currentRoomCode, owner.uid, {
+        landAssets: Math.max(0, (owner.landAssets || 0) - (cell.investedCost || 100))
+      });
+    }
+    banner = '✦ 相打ち！ ✦'; bannerCls = 'result-draw';
+    detail = '相打ち！ 土地が更地に戻った。通行料なし';
+
+  } else if (result === 'draw') {
+    const toll = calcToll(cell, monster);
+    await updatePlayer(currentRoomCode, myUid, { gold: Math.max(0, (p.gold || 0) - toll) });
+    await updatePlayer(currentRoomCode, owner.uid, { gold: (owner.gold || 0) + toll });
+    await fbAddLog(currentRoomCode, `${attacker.name} 引き分け 通行料${toll}G`);
+    banner = '✦ 引き分け ✦'; bannerCls = 'result-draw';
+    detail = `HP変化なし<br>通行料 <span style="color:var(--text-gold)">${toll}G</span>`;
+
+  } else if (result === 'defender_win' || result === 'attacker_forfeit') {
+    // 敗北
+    const toll = calcToll(cell, monster);
+    const goldSteal = Math.floor((p.gold || 0) * 0.7);
+    const totalTaken = toll + goldSteal;
+    await updatePlayer(currentRoomCode, myUid, {
+      gold: Math.max(0, (p.gold || 0) - totalTaken),
+      baseHp: Math.max(1, Math.floor(p.baseMaxHp / 2)),
+      addHp: 0
+    });
+    await updatePlayer(currentRoomCode, owner.uid, { gold: (owner.gold || 0) + totalTaken });
+    await fbAddLog(currentRoomCode, `${attacker.name} 敗北 ${totalTaken}G奪取`);
+    banner = '✦ 敗北… ✦'; bannerCls = 'result-lose';
+    detail = `HP半分で復活<br>通行料 <span style="color:var(--fire)">${toll}G</span>＋手持ち70% <span style="color:var(--fire)">${goldSteal}G</span>`;
+  }
+
+  document.getElementById('battleCmd').style.display = 'none';
+  const res = document.getElementById('battleResult');
+  res.style.display = 'block';
+  document.getElementById('resultBanner').textContent = banner;
+  document.getElementById('resultBanner').className = 'result-banner ' + bannerCls;
+  document.getElementById('resultDetail').innerHTML = detail;
+
+  const rc = document.getElementById('resultCmd');
+  rc.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'btn green';
+  btn.textContent = '▶ ボードに戻る';
+  btn.onclick = async () => {
+    showScreen('gameScreen');
+    // 手持ち0チェック
+    const pLatest = roomState?.players?.[myUid];
+    if (pLatest && pLatest.gold <= 0) {
+      await checkBankruptcy();
+    } else {
+      await endTurn();
+    }
+  };
+  rc.appendChild(btn);
+}
+
+// ===== ショップ =====
+async function shopEvent(p) {
+  const pool = [...WEAPONS.filter(w => !w.initial), ...ARMORS.filter(a => !a.initial), ...SPELLS, ...MONSTERS.filter(m => !m.initial)];
+  const items = pool.sort(() => Math.random() - .5).slice(0, 3);
+  setMsg(`🃏 カードショップ！ レアアイテムが並んでいる`);
+
+  return new Promise(resolve => {
+    showOverlay('🃏 カードショップ',
+      items.map(it => `${it.name} — <span style="color:var(--text-gold)">${it.cost || 0}G</span>`).join('<br>'),
+      items.map(it => {
+        const canBuy = (p.gold || 0) >= (it.cost || 0);
+        const typeKey = WEAPONS.some(w => w.id === it.id) ? 'weapon' :
+                        ARMORS.some(a => a.id === it.id) ? 'armor' :
+                        SPELLS.some(s => s.id === it.id) ? 'spell' : 'monster';
+        return {
+          label: `${it.icon || '📦'} ${it.name} (${it.cost || 0}G)`,
+          cls: canBuy ? 'gold' : 'gray',
+          disabled: !canBuy,
+          fn: async () => {
+            hideOverlay();
+            await buyCard(p, it, typeKey);
+            resolve();
+          }
+        };
+      }).concat([{ label: '何も買わない', fn: () => { hideOverlay(); resolve(); endTurn(); } }])
+    );
+  });
+}
+
+async function buyCard(p, item, typeKey) {
+  const cost = item.cost || 0;
+  let updates = { gold: (p.gold || 0) - cost };
+  const MAX = 3;
+
+  if (typeKey === 'weapon') {
+    const weapons = [...(p.weapons || [])];
+    if (weapons.length >= MAX) {
+      // 捨てるカード選択
+      await discardCard(p, 'weapons', weapons, item, updates);
+      return;
+    }
+    weapons.push(item);
+    updates.weapons = weapons;
+  } else if (typeKey === 'armor') {
+    const armors = [...(p.armors || [])];
+    if (armors.length >= MAX) {
+      await discardCard(p, 'armors', armors, item, updates);
+      return;
+    }
+    armors.push(item);
+    updates.armors = armors;
+  } else if (typeKey === 'spell') {
+    const spells = [...(p.spells || [])];
+    if (spells.length >= MAX) {
+      await discardCard(p, 'spells', spells, item, updates);
+      return;
+    }
+    spells.push(item);
+    updates.spells = spells;
+  } else if (typeKey === 'monster') {
+    const monsters = [...(p.monsters || [])];
+    if (monsters.length >= MAX) {
+      await discardCard(p, 'monsters', monsters, { ...item, currentHp: item.baseHp }, updates);
+      return;
+    }
+    monsters.push({ ...item, currentHp: item.baseHp });
+    updates.monsters = monsters;
+  }
+
+  await updatePlayer(currentRoomCode, myUid, updates);
+  await fbAddLog(currentRoomCode, `${p.name} ${item.name}を購入`);
+  setMsg(`✔ ${item.name}を入手！`);
+  await wait(700);
+  await endTurn();
+}
+
+async function discardCard(p, key, current, newItem, baseUpdates) {
+  return new Promise(resolve => {
+    showOverlay('カードが満杯！', `1枚捨てて${newItem.name}を入手しますか？`,
+      current.map((it, idx) => ({
+        label: `捨てる: ${it.name}`,
+        cls: 'red',
+        fn: async () => {
+          hideOverlay();
+          const newArr = [...current];
+          newArr.splice(idx, 1);
+          if (key === 'monsters') newArr.push({ ...newItem, currentHp: newItem.baseHp });
+          else newArr.push(newItem);
+          const updates = { ...baseUpdates, [key]: newArr };
+          await updatePlayer(currentRoomCode, myUid, updates);
+          await fbAddLog(currentRoomCode, `${p.name} ${newItem.name}を入手`);
+          setMsg(`✔ ${it.name}を捨てて${newItem.name}を入手！`);
+          await wait(700);
+          await endTurn();
+          resolve();
+        }
+      })).concat([{
+        label: '購入をキャンセル',
+        fn: () => { hideOverlay(); endTurn(); resolve(); }
+      }])
+    );
+  });
+}
+
+// ===== スペル選択 =====
+function showSpellSelect() {
+  const p = roomState?.players?.[myUid];
+  if (!p || !p.spells?.length) { showMyTurnUI(); return; }
+
+  showOverlay('🎴 スペルを使う', 'スペル使用後にダイスを振れます',
+    p.spells.map((s, idx) => ({
+      label: `${s.name} (コスト:${s.cost || 0}G)\n${s.desc || ''}`,
+      cls: (p.gold || 0) >= (s.cost || 0) ? 'purple' : 'gray',
+      disabled: (p.gold || 0) < (s.cost || 0),
+      fn: () => { hideOverlay(); useSpell(p, s, idx); }
+    })).concat([{ label: 'スペルを使わない', fn: () => { hideOverlay(); showMyTurnUI(); } }])
+  );
+}
+
+async function useSpell(p, spell, idx) {
+  const cost = spell.cost || 0;
+  const newSpells = [...(p.spells || [])];
+  newSpells.splice(idx, 1);
+  const updates = { gold: (p.gold || 0) - cost, spells: newSpells };
+
+  // エフェクト適用
+  if (spell.effect === 'atkBoost') {
+    updates['effects/atkBoost'] = { value: spell.value, until: 'nextGoal' };
+  } else if (spell.effect === 'haste') {
+    updates['effects/haste'] = (p.effects?.haste || 0) + spell.duration;
+  } else if (spell.effect === 'lapBoost') {
+    updates['effects/lapBoost'] = { value: spell.value, until: 'nextGoal' };
+  } else if (spell.effect === 'deployMonster') {
+    // ぶっこみ
+    const cells = roomState?.cells || {};
+    const empties = Object.values(cells).filter(c => c.type === 'empty');
+    const monsters = p.monsters || [];
+    if (empties.length > 0 && monsters.length > 0) {
+      const target = empties[Math.floor(Math.random() * empties.length)];
+      const mon = monsters[Math.floor(Math.random() * monsters.length)];
+      const newMonsters = monsters.filter((_, i) => i !== monsters.indexOf(mon));
+      await updateCell(currentRoomCode, target.id, {
+        type: 'land', owner: myUid, monster: mon, attr: mon.attr, level: 1, investedCost: 0
+      });
+      updates.monsters = newMonsters;
+      setMsg(`🎲 ${mon.name}をマス${target.id}に召喚！`);
+    } else {
+      updates.gold = (updates.gold || 0) + 300;
+      setMsg('🎲 ぶっこみ！ 空き地なし → +300G');
+    }
+  } else if (spell.effect === 'damageMonsters') {
+    // ぶつかりおじさん
+    const cells = roomState?.cells || {};
+    const targets = Object.values(cells).filter(c => c.type === 'land' && c.owner !== myUid && c.monster);
+    const dmg = spell.value || 7;
+    const count = spell.count || 3;
+    const chosen = targets.length === 0 ? [] :
+      targets.length === 1 ? Array(count).fill(targets[0]) :
+      [...targets].sort(() => Math.random() - .5).slice(0, count);
+    for (const t of chosen) {
+      const newHp = Math.max(0, (t.monster.currentHp || t.monster.baseHp) - dmg);
+      await updateCell(currentRoomCode, t.id, { 'monster/currentHp': newHp });
+    }
+    setMsg(`👴 ぶつかりおじさん！ ${count}体に${dmg}ダメージ`);
+  } else if (spell.effect === 'slowDice') {
+    // 牛歩戦術（対象選択）
+    const players = Object.values(roomState?.players || {}).filter(pl => pl.uid !== myUid || true);
+    await selectTargetPlayer(players, async target => {
+      await updatePlayer(currentRoomCode, target.uid, {
+        'effects/slowDice': (target.effects?.slowDice || 0) + spell.duration
+      });
+      setMsg(`🐢 ${target.name}に牛歩戦術！ ${spell.duration}ターンダイス1〜2`);
+    });
+    await updatePlayer(currentRoomCode, myUid, updates);
+    showMyTurnUI();
+    return;
+  } else if (spell.effect === 'fixDice') {
+    // イカサマのダイス
+    const players = Object.values(roomState?.players || {});
+    await selectTargetPlayer(players, async target => {
+      const diceVal = await selectDiceValue();
+      await updatePlayer(currentRoomCode, target.uid, { 'effects/fixDice': diceVal });
+      setMsg(`🎰 ${target.name}のダイスを${diceVal}に固定！`);
+    });
+    await updatePlayer(currentRoomCode, myUid, updates);
+    showMyTurnUI();
+    return;
+  } else if (spell.effect === 'stealCard') {
+    // ジャ〇アンの理屈
+    const players = Object.values(roomState?.players || {}).filter(pl => pl.uid !== myUid);
+    await selectTargetPlayer(players, async target => {
+      const all = [
+        ...(target.weapons || []).map(c => ({ ...c, _type: 'weapons' })),
+        ...(target.armors || []).map(c => ({ ...c, _type: 'armors' })),
+        ...(target.spells || []).map(c => ({ ...c, _type: 'spells' })),
+        ...(target.monsters || []).map(c => ({ ...c, _type: 'monsters' })),
+      ];
+      if (all.length === 0) { setMsg('カードがない！'); return; }
+      const stolen = all[Math.floor(Math.random() * all.length)];
+      // 相手から削除
+      const newArr = (target[stolen._type] || []).filter(c => c.id !== stolen.id);
+      await updatePlayer(currentRoomCode, target.uid, { [stolen._type]: newArr });
+      // 自分に追加
+      const p2 = roomState?.players?.[myUid] || p;
+      const myArr = [...(p2[stolen._type] || [])];
+      if (myArr.length < 3) {
+        myArr.push(stolen);
+        updates[stolen._type] = myArr;
+      }
+      setMsg(`👊 ${target.name}から${stolen.name}を奪った！`);
+    });
+  } else if (spell.effect === 'betaori') {
+    // ベタオリ（モンスター選択）
+    const cells = roomState?.cells || {};
+    const myLands = Object.values(cells).filter(c => c.owner === myUid && c.type === 'land' && c.monster);
+    if (myLands.length === 0) { setMsg('モンスターがいない'); showMyTurnUI(); return; }
+    await selectTargetCell(myLands, async cell => {
+      await updateCell(currentRoomCode, cell.id, { 'flags/betaori': true });
+      setMsg(`🙅 ${cell.monster.name}にベタオリ設定！`);
+    });
+  } else if (spell.effect === 'morohiki') {
+    // モロ引っ掛け
+    const cells = roomState?.cells || {};
+    const myLands = Object.values(cells).filter(c => c.owner === myUid && c.type === 'land' && c.monster);
+    if (myLands.length === 0) { setMsg('モンスターがいない'); showMyTurnUI(); return; }
+    await selectTargetCell(myLands, async cell => {
+      await updateCell(currentRoomCode, cell.id, { 'flags/morohiki': true });
+      setMsg(`🪤 マス${cell.id}にモロ引っ掛け設置！`);
+    });
+  } else if (spell.effect === 'manjiro') {
+    // マン〇ャロ（自分 or モンスター選択）
+    updates['effects/manjiro'] = { turns: 3, targetMonsterCellId: null };
+    setMsg('💉 マン〇ャロ！ 3ターン間HP回復・ATK強化');
+  }
+
+  await updatePlayer(currentRoomCode, myUid, updates);
+  await fbAddLog(currentRoomCode, `${p.name} ${spell.name}を使用`);
+  await wait(700);
+  showMyTurnUI(); // スペル使用後もダイスを振る
+}
+
+function selectTargetPlayer(players, cb) {
+  return new Promise(resolve => {
+    showOverlay('対象プレイヤー選択', '効果を適用するプレイヤーを選んでください',
+      players.map(pl => ({
+        label: `${pl.icon} ${pl.isAI ? 'AI' : pl.name}`,
+        fn: async () => { hideOverlay(); await cb(pl); resolve(); }
+      }))
+    );
+  });
+}
+
+function selectDiceValue() {
+  return new Promise(resolve => {
+    showOverlay('ダイスの目を指定', '1〜6で指定してください',
+      [1,2,3,4,5,6].map(n => ({
+        label: `${['⚀','⚁','⚂','⚃','⚄','⚅'][n-1]} ${n}`,
+        fn: () => { hideOverlay(); resolve(n); }
+      }))
+    );
+  });
+}
+
+function selectTargetCell(cells, cb) {
+  return new Promise(resolve => {
+    showOverlay('モンスターを選択', '対象のモンスターを選んでください',
+      cells.map(c => ({
+        label: `マス${c.id}: ${c.monster?.icon || '👾'} ${c.monster?.name || '???'}`,
+        fn: async () => { hideOverlay(); await cb(c); resolve(); }
+      }))
+    );
+  });
+}
+
+// ===== 破産・強制売却 =====
+async function checkBankruptcy() {
+  const p = roomState?.players?.[myUid];
+  if (!p || p.gold > 0) { await endTurn(); return; }
+
+  const cells = roomState?.cells || {};
+  const myLands = Object.values(cells).filter(c => c.owner === myUid && c.type === 'land');
+  if (myLands.length === 0) {
+    setMsg(`<span style="color:var(--fire)">破産！土地もなくゲームオーバー…</span>`);
+    await fbAddLog(currentRoomCode, `${p.name} 破産`);
+    return;
+  }
+
+  sellCallback = endTurn;
+  sellSelected = new Set();
+  showSellScreen(p, myLands);
+}
+
+function showSellScreen(p, myLands) {
+  showScreen('sellScreen');
+  document.getElementById('sellDesc').innerHTML =
+    `<span style="color:var(--water)">${p.name}</span> の手持ち: <span style="color:var(--fire)">${p.gold}G</span>　手持ちが1G以上になるまで売却してください`;
+  renderSellList(p, myLands);
+  updateSellStatus(p);
+}
+
+function renderSellList(p, myLands) {
+  const cells = roomState?.cells || {};
+  const list = document.getElementById('sellList');
+  list.innerHTML = '';
+  myLands.forEach(c => {
+    const sp = sellPrice(c);
+    const av = landAssetValue(c, cells, myUid);
+    const cb = chainBonus(c.attr, cells, myUid);
+    const isSel = sellSelected.has(c.id);
+    const div = document.createElement('div');
+    div.className = 'sell-item' + (isSel ? ' selected' : '');
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:700;color:${ATTR[c.attr]?.color || '#aaa'}">${c.monster?.icon || '⬜'} マス${c.id} Lv${c.level}</span>
+        <span style="font-family:'DotGothic16',monospace;font-size:14px;color:${isSel ? 'var(--fire)' : 'var(--text-gold)'}">売 ${sp}G</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);line-height:1.8">
+        属性: <span style="color:${ATTR[c.attr]?.color || '#aaa'}">${ATTR[c.attr]?.label || '無'}</span>　
+        投下資本: ${c.investedCost || 100}G　資産価値: ${av}G${cb > 0 ? ` (+${Math.floor(cb * 100)}% 連鎖)` : ''}
+      </div>
+      ${isSel ? '<div style="font-size:11px;color:var(--fire);margin-top:4px">✓ 売却選択中</div>' : ''}
+    `;
+    div.onclick = () => {
+      if (sellSelected.has(c.id)) sellSelected.delete(c.id);
+      else sellSelected.add(c.id);
+      const p2 = roomState?.players?.[myUid] || p;
+      renderSellList(p2, myLands);
+      updateSellStatus(p2);
+    };
+    list.appendChild(div);
+  });
+}
+
+function updateSellStatus(p) {
+  const cells = roomState?.cells || {};
+  const total = Array.from(sellSelected).reduce((s, id) => {
+    const c = cells[id]; return s + (c ? sellPrice(c) : 0);
+  }, 0);
+  const newGold = (p.gold || 0) + total;
+  const ok = newGold > 0 && sellSelected.size > 0;
+  document.getElementById('sellStatus').innerHTML =
+    `売却合計: <span style="color:var(--text-gold)">${total}G</span>　売却後: <span style="color:${ok ? 'var(--hg)' : 'var(--fire)'}">${newGold}G</span>${ok ? '' : '（まだ足りません）'}`;
+  document.getElementById('sellDoneBtn').disabled = !ok;
+}
+
+window.finishSell = async function() {
+  const p = roomState?.players?.[myUid];
+  if (!p) return;
+  const cells = roomState?.cells || {};
+
+  for (const id of sellSelected) {
+    const c = cells[id];
+    if (!c) continue;
+    const sp = sellPrice(c);
+    const av = landAssetValue(c, cells, myUid);
+    await updatePlayer(currentRoomCode, myUid, {
+      gold: (roomState?.players?.[myUid]?.gold || 0) + sp,
+      landAssets: Math.max(0, (roomState?.players?.[myUid]?.landAssets || 0) - av)
+    });
+    await updateCell(currentRoomCode, id, {
+      owner: null, type: 'empty', attr: 'none', monster: null, level: 1, investedCost: 0
+    });
+    await fbAddLog(currentRoomCode, `${p.name} マス${id}を売却 +${sp}G`);
+  }
+  sellSelected.clear();
+  showScreen('gameScreen');
+  if (sellCallback) { const cb = sellCallback; sellCallback = null; setTimeout(cb, 300); }
+};
+
+// ===== ターン終了 =====
+async function endTurn() {
+  if (!roomState) return;
+  const players = Object.values(roomState.players || {});
+  const currentTurnUid = roomState.turn?.uid;
+  const currentIdx = players.findIndex(p => p.uid === currentTurnUid);
+  const nextIdx = (currentIdx + 1) % players.length;
+  const nextPlayer = players[nextIdx];
+  const newCount = (roomState.turn?.count || 1) + (nextIdx === 0 ? 1 : 0);
+
+  await updateTurn(currentRoomCode, nextPlayer.uid, newCount);
+
+  // AI処理
+  if (nextPlayer.isAI) {
+    await wait(600);
+    await runAI(nextPlayer);
+  }
+}
+
+// ===== AI処理（簡易）=====
+async function runAI(aiPlayer) {
+  const roll = Math.floor(Math.random() * 6) + 1;
+  setMsg(`🤖 ${aiPlayer.name} のターン — ダイス ${roll}`);
+  await wait(800);
+
+  let pos = aiPlayer.pos;
+  for (let i = 0; i < roll; i++) {
+    pos = (pos + 1) % N;
+    await updatePlayer(currentRoomCode, aiPlayer.uid, { pos });
+    drawBoard();
+    await wait(250);
+  }
+
+  const cells = roomState?.cells || {};
+  const cell = cells[pos];
+
+  if (cell?.type === 'empty' && aiPlayer.gold >= 100) {
+    await updatePlayer(currentRoomCode, aiPlayer.uid, {
+      gold: aiPlayer.gold - 100,
+      landAssets: (aiPlayer.landAssets || 0) + 100
+    });
+    await updateCell(currentRoomCode, pos, {
+      type: 'land', owner: aiPlayer.uid, investedCost: 100
+    });
+    // AIは初期モンスター配置
+    if (aiPlayer.monsters?.length > 0) {
+      const mon = aiPlayer.monsters[0];
+      const newMonsters = [...aiPlayer.monsters];
+      newMonsters.splice(0, 1);
+      await updatePlayer(currentRoomCode, aiPlayer.uid, { monsters: newMonsters });
+      await updateCell(currentRoomCode, pos, {
+        attr: mon.attr, monster: { ...mon, currentHp: mon.baseHp }
+      });
+    }
+  } else if (cell?.type === 'land' && cell?.owner && cell?.owner !== aiPlayer.uid) {
+    // AI：通行料を払う
+    const owner = roomState?.players?.[cell.owner];
+    if (owner) {
+      const toll = Math.floor(calcToll(cell, cell.monster) / 2);
+      await updatePlayer(currentRoomCode, aiPlayer.uid, { gold: Math.max(0, aiPlayer.gold - toll) });
+      await updatePlayer(currentRoomCode, owner.uid, { gold: (owner.gold || 0) + toll });
+    }
+  }
+
+  // CP処理
+  if (cell?.type === 'cp' && !aiPlayer.cpDone) {
+    await updatePlayer(currentRoomCode, aiPlayer.uid, { cpDone: true, gold: aiPlayer.gold + 100 });
+  }
+  // ゴール処理
+  if (cell?.type === 'goal' || pos === 0) {
+    await handleAIGoal(aiPlayer);
+  }
+
+  await wait(400);
+  await endTurn();
+}
+
+async function handleAIGoal(p) {
+  if (p.cpDone) {
+    const lapBonus = 500 + (p.lapCount || 0) * 100;
+    const hpRecover = Math.floor(p.baseMaxHp * 0.3);
+    const char = getChar(p.charId);
+    await updatePlayer(currentRoomCode, p.uid, {
+      gold: (p.gold || 0) + lapBonus,
+      baseHp: Math.min(p.baseMaxHp, p.baseHp + hpRecover),
+      baseMaxHp: p.baseMaxHp + (char?.lapHp || 5),
+      baseAtk: p.baseAtk + (char?.lapAtk || 3),
+      lapCount: (p.lapCount || 0) + 1,
+      cpDone: false
+    });
+    await fbAddLog(currentRoomCode, `${p.name} 周回 +${lapBonus}G`);
+  } else {
+    await updatePlayer(currentRoomCode, p.uid, { cpDone: false });
+  }
+}
+
+// ===== マスクリック（詳細ポップアップ）=====
+function onCanvasClick(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width;
+  const mx = (e.clientX - rect.left) * sx;
+  const my = (e.clientY - rect.top) * sx;
+  const r = canvas.width * 0.055;
+
+  const hit = positions.findIndex(p => Math.abs(p.x - mx) < r + 6 && Math.abs(p.y - my) < r + 6);
+  if (hit >= 0) showCellPopup(hit);
+}
+
+function showCellPopup(cellId) {
+  const cells = roomState?.cells || {};
+  const players = roomState?.players || {};
+  const cell = cells[cellId];
+  if (!cell) return;
+
+  const owner = cell.owner ? players[cell.owner] : null;
+  const monster = cell.monster;
+  const toll = calcToll(cell, monster);
+  const av = cell.type === 'land' ? landAssetValue(cell, cells, cell.owner) : 0;
+
+  document.getElementById('cpTitle').textContent =
+    `${cell.type === 'goal' ? '⭐' : cell.type === 'cp' ? '🚩' : cell.type === 'shop' ? '🃏' : monster?.icon || '⬜'} マス${cellId}`;
+
+  const rows = [
+    ['種類', { goal: 'ゴール', cp: 'チェックポイント', shop: 'ショップ', land: '土地', empty: '空き地' }[cell.type] || '?'],
+    cell.type === 'land' ? ['土地レベル', `Lv${cell.level}`] : null,
+    cell.type === 'land' ? ['通行料', `${toll}G`] : null,
+    cell.type === 'land' ? ['資産価値', `${av}G`] : null,
+    owner ? ['所有者', `${owner.icon} ${owner.name}`] : null,
+    monster ? ['モンスター', `${monster.icon || '👾'} ${monster.name}`] : null,
+    monster ? ['モンスターHP', `${monster.currentHp || monster.baseHp} / ${monster.maxHp}`] : null,
+    monster ? ['モンスターATK', `${monster.atk}${hasAdjacentBonus(cell, cells) ? ' (×1.5隣接)' : ''}`] : null,
+    cell.attr !== 'none' ? ['属性', ATTR[cell.attr]?.label || '？'] : null,
+  ].filter(Boolean);
+
+  document.getElementById('cpRows').innerHTML = rows.map(([k, v]) =>
+    `<div class="cell-popup-row"><span>${k}</span><span>${v}</span></div>`
+  ).join('');
+
+  document.getElementById('cellPopup').classList.add('show');
+}
+
+window.closeCellPopup = () => document.getElementById('cellPopup').classList.remove('show');
+
+// ===== 最終結果 =====
+function showFinalResult(players, cells) {
+  showScreen('resultScreen');
+  const sorted = [...players].sort((a, b) => totalAssets(b, cells) - totalAssets(a, cells));
+  const rankEmoji = ['🥇', '🥈', '🥉', '4位'];
+  const list = document.getElementById('finalRankList');
+  list.innerHTML = '';
+  sorted.forEach((p, i) => {
+    const ta = totalAssets(p, cells);
+    const div = document.createElement('div');
+    div.className = `final-rank-item${i === 0 ? ' rank1' : ''}`;
+    div.innerHTML = `
+      <div class="final-rank-num">${rankEmoji[i] || i + 1 + '位'}</div>
+      <div class="final-rank-icon">${p.icon}</div>
+      <div class="final-rank-info">
+        <div class="final-rank-name">${p.isAI ? 'AI' : p.name}</div>
+        <div class="final-rank-assets">${ta.toLocaleString()} G</div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ===== 共通UI関数 =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function setMsg(html) {
+  const el = document.getElementById('msgBox');
+  if (el) el.innerHTML = html + '<span class="msg-cursor">█</span>';
+}
+
+function setCmds(btns) {
+  const area = document.getElementById('cmdArea');
+  if (!area) return;
+  area.innerHTML = '';
+  btns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'btn ' + (b.cls || '');
+    el.textContent = b.label;
+    el.disabled = !!b.disabled;
+    el.onclick = b.fn;
+    area.appendChild(el);
+  });
+}
+
+function setBattleMsg(html) {
+  const el = document.getElementById('battleMsg');
+  if (el) el.innerHTML = html + '<span class="msg-cursor">█</span>';
+}
+
+function setBattleCmds(btns) {
+  const row = document.getElementById('battleCmd');
+  if (!row) return;
+  row.innerHTML = '';
+  btns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'btn ' + (b.cls || '');
+    el.textContent = b.label;
+    el.disabled = !!b.disabled;
+    el.onclick = b.fn;
+    row.appendChild(el);
+  });
+}
+
+function showOverlay(title, desc, btns) {
+  document.getElementById('ovTitle').textContent = title;
+  document.getElementById('ovDesc').innerHTML = desc;
+  const list = document.getElementById('ovList');
+  list.innerHTML = '';
+  btns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'ov-btn ' + (b.cls || '');
+    el.innerHTML = b.label.replace(/\n/g, '<br>');
+    el.disabled = !!b.disabled;
+    el.onclick = b.fn;
+    list.appendChild(el);
+  });
+  document.getElementById('overlay').classList.add('show');
+}
+
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+window.toggleLog = function() {
+  const b = document.getElementById('logBody');
+  const open = b.classList.toggle('open');
+  const la = document.getElementById('logArrow');
+  if (la) la.textContent = open ? '▲' : '▼';
+};
+
+function addLocalLog(msg) {
+  const el = document.getElementById('logBody');
+  if (!el) return;
+  const d = document.createElement('div');
+  d.innerHTML = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showPlayerDetail(p, cells) {
+  // プレイヤーカードクリックで詳細表示（簡易）
+  const ta = totalAssets(p, cells);
+  const myLands = Object.values(cells).filter(c => c.owner === p.uid && c.type === 'land');
+  showOverlay(
+    `${p.icon} ${p.isAI ? 'AI' : p.name}`,
+    `総資産: ${ta}G<br>手持ち: ${p.gold}G<br>基礎HP: ${p.baseHp}/${p.baseMaxHp}<br>加算HP: ${p.addHp}<br>ATK: ${p.baseAtk}<br>所有土地: ${myLands.length}マス${p.effects?.poisoned ? '<br><span style="color:#dd44ff">☠ 毒状態</span>' : ''}`,
+    [{ label: '閉じる', fn: hideOverlay }]
+  );
+}
+
+</script>
+</body>
+</html>
