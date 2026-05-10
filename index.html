@@ -1,0 +1,35 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>雀魂大会197592 集計</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'; mermaid.initialize({startOnLoad:true,theme:'base'});</script><style>body{font-family:system-ui,'Yu Gothic',sans-serif;margin:24px;color:#1b1f24}table{border-collapse:collapse;width:100%;margin:16px 0 32px;font-size:14px}th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:right}th:nth-child(2),td:nth-child(2),.rel th,.rel td{text-align:left}th{background:#f6f8fa}.note{color:#57606a}.mermaid{border:1px solid #d0d7de;padding:16px;overflow:auto}</style></head><body><h1>雀魂大会「テスト」集計</h1><p class="note">大会ID: 197592 / 対象: 全期間 357半荘 / 総得点・平均得点は牌譜一覧のポイント列で集計。</p><h2>個人成績ランキング</h2><table><thead><tr><th>順位</th><th>プレイヤー</th><th>半荘数</th><th>総得点</th><th>平均得点</th><th>平均順位</th><th>トップ率</th><th>ラス率</th><th>平均素点</th></tr></thead><tbody><tr><td>1</td><td>流れ者金融</td><td>171</td><td>1549.6</td><td>9.06</td><td>1.813</td><td>45.0%</td><td>26.3%</td><td>41255</td></tr>
+<tr><td>2</td><td>鯛ofカルピス</td><td>150</td><td>500.3</td><td>3.34</td><td>1.933</td><td>36.0%</td><td>29.3%</td><td>37335</td></tr>
+<tr><td>3</td><td>ひなんじょ</td><td>189</td><td>49.8</td><td>0.26</td><td>2.005</td><td>32.8%</td><td>33.3%</td><td>35343</td></tr>
+<tr><td>4</td><td>アリスkey</td><td>169</td><td>-212.8</td><td>-1.26</td><td>2.000</td><td>30.2%</td><td>30.2%</td><td>33741</td></tr>
+<tr><td>5</td><td>29ちゃん</td><td>206</td><td>-389.8</td><td>-1.89</td><td>2.053</td><td>32.5%</td><td>37.9%</td><td>33909</td></tr>
+<tr><td>6</td><td>葡萄海ぶどう</td><td>186</td><td>-1497.1</td><td>-8.05</td><td>2.161</td><td>24.7%</td><td>40.9%</td><td>29370</td></tr></tbody></table><h2>許せない相関図</h2><p class="note">矢印は「左のプレイヤーが右のプレイヤーに負け越し」。ラベルは 負け越し数 / 直接対戦数。負け越し3以上のみ表示。</p><pre class="mermaid">flowchart LR
+  p1["葡萄海ぶどう"]
+  p2["アリスkey"]
+  p3["鯛ofカルピス"]
+  p4["流れ者金融"]
+  p5["29ちゃん"]
+  p6["ひなんじょ"]
+  p1 -->|"22負け越し / 90戦"| p2
+  p1 -->|"22負け越し / 76戦"| p3
+  p3 -->|"22負け越し / 74戦"| p4
+  p2 -->|"21負け越し / 79戦"| p4
+  p5 -->|"13負け越し / 57戦"| p3
+  p5 -->|"12負け越し / 96戦"| p4
+  p6 -->|"9負け越し / 93戦"| p4
+  p1 -->|"8負け越し / 110戦"| p5
+  p1 -->|"8負け越し / 96戦"| p6
+  p2 -->|"7負け越し / 45戦"| p3
+  p5 -->|"4負け越し / 66戦"| p2</pre><h2>直接対戦一覧</h2><table class="rel"><thead><tr><th>負け越し</th><th>相手</th><th>負け越し数</th><th>対戦数</th><th>勝敗</th><th>ポイント差</th></tr></thead><tbody><tr><td>葡萄海ぶどう</td><td>アリスkey</td><td>22</td><td>90</td><td>34-56</td><td>-1060.9</td></tr>
+<tr><td>葡萄海ぶどう</td><td>鯛ofカルピス</td><td>22</td><td>76</td><td>27-49</td><td>-1114.3</td></tr>
+<tr><td>鯛ofカルピス</td><td>流れ者金融</td><td>22</td><td>74</td><td>26-48</td><td>-597.0</td></tr>
+<tr><td>アリスkey</td><td>流れ者金融</td><td>21</td><td>79</td><td>29-50</td><td>-1502.9</td></tr>
+<tr><td>29ちゃん</td><td>鯛ofカルピス</td><td>13</td><td>57</td><td>22-35</td><td>-883.2</td></tr>
+<tr><td>29ちゃん</td><td>流れ者金融</td><td>12</td><td>96</td><td>42-54</td><td>-1050.1</td></tr>
+<tr><td>ひなんじょ</td><td>流れ者金融</td><td>9</td><td>93</td><td>42-51</td><td>-1498.8</td></tr>
+<tr><td>葡萄海ぶどう</td><td>29ちゃん</td><td>8</td><td>110</td><td>51-59</td><td>-1182.2</td></tr>
+<tr><td>葡萄海ぶどう</td><td>ひなんじょ</td><td>8</td><td>96</td><td>44-52</td><td>-1133.9</td></tr>
+<tr><td>アリスkey</td><td>鯛ofカルピス</td><td>7</td><td>45</td><td>19-26</td><td>-308.3</td></tr>
+<tr><td>29ちゃん</td><td>アリスkey</td><td>4</td><td>66</td><td>31-35</td><td>-60.7</td></tr>
+<tr><td>ひなんじょ</td><td>アリスkey</td><td>2</td><td>58</td><td>28-30</td><td>-51.2</td></tr>
+<tr><td>29ちゃん</td><td>ひなんじょ</td><td>1</td><td>83</td><td>41-42</td><td>-357.6</td></tr></tbody></table></body></html>
